@@ -35,8 +35,8 @@
  * 応用編：
  * メモに<avatar>と書かれたマップイベントが現在のマップにあるとき、
  * そのイベントの「ページ１」が画面に表示されるアバターにコピーされます。
- * （ただし今のところ強制的に「並列処理」扱いになります）これと下記の
- * プラグインコマンドを組み合わせるとチャットとかできます詳しくはサンプル見てね
+ * これと下記のプラグインコマンドを組み合わせるとチャットとかも実装できます。
+ * 詳しくはサンプル見てね→https://krmbn0576.github.io/rpgmakermv/
  * 
  * プラグインコマンド：
  * online 1 to chat　変数１番の内容を「chat」という名前で送信します。
@@ -191,7 +191,7 @@
 					$gameVariables.setValue(+args[0], online && online[args[2]]);
 					break;
 				case 'to':
-					var info = playerInfo();
+					var info = {};
 					info[args[2]] = $gameVariables.value(+args[0]);
 					if (selfRef) selfRef.update(info);
 					break;
