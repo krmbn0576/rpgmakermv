@@ -191,7 +191,7 @@
 					$gameVariables.setValue(+args[0], online && online[args[2]]);
 					break;
 				case 'to':
-					var info = {};
+					var info = playerInfo();
 					info[args[2]] = $gameVariables.value(+args[0]);
 					if (selfRef) selfRef.update(info);
 					break;
@@ -201,11 +201,17 @@
 			}
 		};
 
+		//再接続時にonDisconnectを張り直す
+		var connectedRef = firebase.database().ref('.info/connected');
+		connectedRef.on('value', function(data) {
+			if (data.val() && selfRef) selfRef.onDisconnect().remove();
+		});
+
 		//接続が最初のマップ読み込みよりも遅延した時は、今いるマップでコールバックを登録する
 		if (isMapLoaded() && !$gamePlayer.isTransferring()) $gamePlayer.performTransfer();
 	}
 
-	//デバッグ用。引数の値をそのまま返してくれるのでどこにでも挟めるよ！
+	//デバッグ用
 	function log(value) {
 		console.log(value);
 		return value;
