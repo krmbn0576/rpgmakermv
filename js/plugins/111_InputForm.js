@@ -3,8 +3,8 @@
 //=============================================================================
 
 /*:
- * @plugindesc フォーム作って文字入力
- * @author １１１
+ * @plugindesc フォーム作って文字入力（修正版）
+ * @author １１１, くらむぼん
  *
  *
  * @help InputForm x=350;y=200;v=11;max=5;
@@ -14,11 +14,19 @@
  * 時間切れなどを作りたい時は、if_s=3;を付けると
  * ”スイッチ３がONになった場合”に強制終了できます
  * 並列イベントの中で、スイッチ３をONにするイベントを作りましょう
+ * （ハマリポイント１）なおこの際、強制終了した瞬間の
+ * テキストが結果の変数にしっかり保存されていることに注意。
  * 
  * cssフォルダを作ってそこに111_InputForm.cssを入れること。
- * 111_InputForm.cssをいじって文字の大きさとかも変えられる
+ * このファイルをいじって文字の大きさや、ウィンドウのデザイン・幅とかも変えられる
+ * いじり方がわからなかったら「css 書き方」などで検索だ！
  *
  * 入力が終わるまで次のイベントコマンドは読み込みません
+ * （ハマリポイント２）次のイベントコマンドの読み込みまでは
+ * 少し間があるため結果の変数を他の並列処理で上書きしないよう注意。
+ * 
+ * ライセンス：
+ * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
 */
 (function() {
     // css追加
@@ -26,7 +34,7 @@
         var css = document.createElement('link');
         css.rel = "stylesheet";
         css.type = 'text/css';
-        css.href = './js/plugins/111css.css';
+        css.href = './css/111_InputForm.css';
         var b_top = document.getElementsByTagName('head')[0];
         b_top.appendChild(css);
     })();
@@ -132,15 +140,10 @@
                     var screen_x , screen_y;
                     var _canvas = document.querySelector('#UpperCanvas');
                     var rect = _canvas.getBoundingClientRect();
-                    if(! this.is_pc){ // web用座標
-                        screen_x = rect.x;
-                        screen_y = rect.y;
-                    }else{ // exe用(左上0,0からでOK)
-                        screen_x = 0;
-                        screen_y = 0;
-                    }
-                    this.input.postionAdjust([screen_x,screen_y] , [target_x,target_y + 40]);
-                    this.submit.postionAdjust([screen_x,screen_y] , [target_x,target_y]);
+                    screen_x = rect.left;
+                    screen_y = rect.top;
+                    this.input.postionAdjust([screen_x,screen_y] , [target_x,target_y]);
+                    this.submit.postionAdjust([screen_x,screen_y] , [target_x,target_y + 50]);
                 }
             }
             //
