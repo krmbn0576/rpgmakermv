@@ -88,7 +88,7 @@
 
 	//サインイン完了後
 	function start(user) {
-		var avatarTemplate = {"id":0,"meta":{},"name":"","note":"","pages":[{"conditions":{"actorId":1,"actorValid":false,"itemId":1,"itemValid":false,"selfSwitchCh":"A","selfSwitchValid":false,"switch1Id":1,"switch1Valid":false,"switch2Id":1,"switch2Valid":false,"variableId":1,"variableValid":false,"variableValue":0},"directionFix":false,"image":{"tileId":0,"characterName":"","direction":2,"pattern":1,"characterIndex":0},"list":[{"code":0,"indent":0,"parameters":[]}],"moveFrequency":3,"moveRoute":{"list":[{"code":0,"parameters":[]}],"repeat":true,"skippable":false,"wait":false},"moveSpeed":5,"moveType":0,"priorityType":1,"stepAnime":false,"through":true,"trigger":4,"walkAnime":true}],"x":0,"y":0};
+		var avatarTemplate = {"id":0,"meta":{},"name":"","note":"","pages":[{"conditions":{"actorId":1,"actorValid":false,"itemId":1,"itemValid":false,"selfSwitchCh":"A","selfSwitchValid":false,"switch1Id":1,"switch1Valid":false,"switch2Id":1,"switch2Valid":false,"variableId":1,"variableValid":false,"variableValue":0},"directionFix":false,"image":{"tileId":0,"characterName":"","direction":2,"pattern":1,"characterIndex":0},"list":[{"code":0,"indent":0,"parameters":[]}],"moveFrequency":5,"moveRoute":{"list":[{"code":45,"parameters":["this.moveOnlineXy()"],"indent":null},{"code":0,"parameters":[]}],"repeat":true,"skippable":false,"wait":false},"moveSpeed":5,"moveType":3,"priorityType":1,"stepAnime":false,"through":true,"trigger":4,"walkAnime":true}],"x":0,"y":0};
 		var mapRef, selfRef, prevPlayerInfo;
 
 		//歩行時
@@ -106,7 +106,7 @@
 		//グラフィック変更時
 		var _Game_Player_setImage = Game_Player.prototype.setImage;
 		Game_Player.prototype.setImage = function(characterName, characterIndex) {
-			(_Game_Player_setImage || Game_Character.prototype.setImage).apply(this, arguments);
+			_Game_Player_setImage.apply(this, arguments);
 			if (selfRef && !this.isTransferring()) selfRef.update(playerInfo());	//場所移動した時は不要
 		};
 
@@ -142,9 +142,7 @@
 			//他プレイヤーが同マップで移動
 			mapRef.on('child_changed', function(data) {
 				if (data.key !== user.uid && isMapLoaded()) {
-					if (avatarsInThisMap[data.key]) {
-						avatarsInThisMap[data.key].moveSmooth(data.val());
-					} else {	//念の為
+					if (!avatarsInThisMap[data.key]) {	//念の為
 						avatarsInThisMap[data.key] = new Game_Avatar(avatarTemplate, data.val());
 					}
 					avatarsInThisMap[data.key].online = data.val();
@@ -269,37 +267,19 @@
 		return this._eventData;
 	};
 
-	//座標情報が飛び飛びでもスムーズに移動する
-	Game_Avatar.prototype.moveSmooth = function(onlineData) {		
-		var dx = onlineData.x - this.x;
-		var dy = onlineData.y - this.y;
-		var C = Game_Character;
-		var route = {list: [], repeat: false, skippable: true, wait: false};
-
-		this.setMoveSpeed(onlineData.speed);
-		this.setImage(onlineData.charaName, onlineData.charaIndex);
-
-		if (dx !== 0) {
-			var l = Math.abs(dx);
-			var d = dx > 0 ? C.ROUTE_MOVE_RIGHT : C.ROUTE_MOVE_LEFT;
-			for (var i = 0; i < l; i++) {
-				route.list.push({code: d, parameters: []});
-			}
+	//オンライン座標と同じ位置まで歩く（avatarTemplateのカスタムルートに設定されています）
+	Game_Avatar.prototype.moveOnlineXy = function() {
+		this.setMoveSpeed(this.online.speed);
+		this.setImage(this.online.charaName, this.online.charaIndex);
+		var distance = Math.abs(this.online.x - this.x) + Math.abs(this.online.y - this.y);
+		if (distance === 0) {	//座標に到達しているなら方向転換のみ
+			this.setDirection(this.online.direction);
+		} else if (distance > 5) {	//座標まで５歩を超えて離れているならワープ
+			this.locate(this.online.x, this.online.y);
+			this.setDirection(this.online.direction);
+		} else {	//座標まで１～５歩ならその座標へ歩く
+			this.moveTowardCharacter({x: this.online.x, y: this.online.y});
 		}
-
-		if (dy !== 0) {
-			var l = Math.abs(dy);
-			var d = dy > 0 ? C.ROUTE_MOVE_DOWN : C.ROUTE_MOVE_UP;
-			for (var i = 0; i < l; i++) {
-				route.list.push({code: d, parameters: []});
-			}
-		}
-
-		var d = {2: C.ROUTE_TURN_DOWN, 4: C.ROUTE_TURN_LEFT, 6: C.ROUTE_TURN_RIGHT, 8: C.ROUTE_TURN_UP};
-		route.list.push({code: d[onlineData.direction], parameters: []});
-		route.list.push({code: 0, parameters: []});
-
-		this.forceMoveRoute(route);
 	};
 
 	//グローバルオブジェクトに登録
