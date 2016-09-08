@@ -89,17 +89,16 @@
 	//サインイン完了後
 	function start(user) {
 		var avatarTemplate = {"id":0,"meta":{},"name":"","note":"","pages":[{"conditions":{"actorId":1,"actorValid":false,"itemId":1,"itemValid":false,"selfSwitchCh":"A","selfSwitchValid":false,"switch1Id":1,"switch1Valid":false,"switch2Id":1,"switch2Valid":false,"variableId":1,"variableValid":false,"variableValue":0},"directionFix":false,"image":{"tileId":0,"characterName":"","direction":2,"pattern":1,"characterIndex":0},"list":[{"code":0,"indent":0,"parameters":[]}],"moveFrequency":5,"moveRoute":{"list":[{"code":45,"parameters":["this.moveOnlineXy()"],"indent":null},{"code":0,"parameters":[]}],"repeat":true,"skippable":false,"wait":false},"moveSpeed":5,"moveType":3,"priorityType":1,"stepAnime":false,"through":true,"trigger":4,"walkAnime":true}],"x":0,"y":0};
-		var mapRef, selfRef, prevPlayerInfo;
+		var mapRef, selfRef;
 
 		//歩行時
 		var _Game_Player_moveStraight = Game_Player.prototype.moveStraight;
-		Game_Player.prototype.moveStraight = function(direction) {
+		Game_Player.prototype.moveStraight = function(d) {
+			var prevD = this.direction();
 			_Game_Player_moveStraight.apply(this, arguments);
 			//前回と同じ位置・方向の時は送らない
-			var info = JSON.stringify(playerInfo()) + $gameMap.mapId();
-			if (selfRef && info !== prevPlayerInfo) {
+			if (selfRef && (this.isMovementSucceeded() || d !== prevD)) {
 				selfRef.update(playerInfo());
-				prevPlayerInfo = info;
 			}
 		};
 
@@ -271,14 +270,14 @@
 	Game_Avatar.prototype.moveOnlineXy = function() {
 		this.setMoveSpeed(this.online.speed);
 		this.setImage(this.online.charaName, this.online.charaIndex);
-		var distance = Math.abs(this.online.x - this.x) + Math.abs(this.online.y - this.y);
+		var distance = $gameMap.distance(this.x, this.y, this.online.x, this.online.y);
 		if (distance === 0) {	//座標に到達しているなら方向転換のみ
 			this.setDirection(this.online.direction);
 		} else if (distance > 5) {	//座標まで５歩を超えて離れているならワープ
 			this.locate(this.online.x, this.online.y);
 			this.setDirection(this.online.direction);
 		} else {	//座標まで１～５歩ならその座標へ歩く
-			this.moveTowardCharacter({x: this.online.x, y: this.online.y});
+			this.moveTowardCharacter(this.online);
 		}
 	};
 
