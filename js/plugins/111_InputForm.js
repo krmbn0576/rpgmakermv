@@ -17,7 +17,7 @@
  * （ハマリポイント１）なおこの際、強制終了した瞬間の
  * テキストが結果の変数にしっかり保存されていることに注意。
  * 
- * cssフォルダを作ってそこに111_InputForm.cssを入れること。
+ * index.htmlと同じ場所にcssフォルダを作ってそこに111_InputForm.cssを入れること。
  * このファイルをいじって文字の大きさや、ウィンドウのデザイン・幅とかも変えられる
  * いじり方がわからなかったら「css 書き方」などで検索だ！
  *
@@ -59,8 +59,8 @@
     }
 
     HTMLElement.prototype.postionAdjust = function(screen_postion , target_postion){
-        this.style.left = ((screen_postion[0] + target_postion[0]) / window.innerWidth * 100) + "%";
-        this.style.top  = ((screen_postion[1] + target_postion[1]) / window.innerHeight * 100) + "%";
+        this.style.left = screen_postion[0] + target_postion[0] * Graphics._realScale + "px";
+        this.style.top  = screen_postion[1] + target_postion[1] * Graphics._realScale + "px";
     };
     // 引数のx=350;y=200;みたいなのを可能にする
     var argHash = function(text , arg_names){
@@ -131,7 +131,7 @@
                 end : function(){
                     this.input.remove(); // document.body.removeChild(this.input);
                     this.submit.remove();
-                    window.removeEventListener("resize", this.screenAdjust, false);
+                    window.removeEventListener("resize", resizeEvent, false);
                     interpreter.setWaitMode('');
                     Input.form_mode = false;
                     // SceneManager._scene.start();
@@ -170,9 +170,10 @@
             }, 1);
 
             // webではウィンドー大きさ変わる度に%求め直すイベントもいる
-            if(! gui.is_pc){
-                window.addEventListener("resize", gui.screenAdjust.bind(gui), false);
-            }
+            //if(! gui.is_pc){
+                var resizeEvent = gui.screenAdjust.bind(gui);
+                window.addEventListener("resize", resizeEvent, false);
+            //}
             //
             gui.start();
         }
