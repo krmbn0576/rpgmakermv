@@ -7,11 +7,11 @@ var $plugins =
 {"name":"DTextPicture","status":true,"description":"動的文字列ピクチャ生成プラグイン","parameters":{}},
 {"name":"TMNamePop","status":true,"description":"イベントの頭上に文字列を表示する機能を追加します。","parameters":{"backOpacity":"96","fontSize":"20","fontOutlineWidth":"4","fontOutlineColor":"rgba(0, 0, 0, 0.5)","width":"160","useRoundRect":"0","roundRectRadius":"6"}},
 {"name":"QuickMove","status":true,"description":"歩行とジャンプを素早く(2000風に)します。","parameters":{}},
-{"name":"OnlineAvatar","status":true,"description":"Firebaseを使ってプレイヤーをオンライン同期します。","parameters":{"apiKey":"AIzaSyAbDEqyhj4YAhsv0Z05UVgo8wqc-7-_7mo","authDomain":"mosimo-online.firebaseapp.com","databaseURL":"https://mosimo-online.firebaseio.com"}},
+{"name":"OnlineAvatar","status":true,"description":"Firebaseを使ってプレイヤーをオンライン同期します。","parameters":{"apiKey":"AIzaSyAbDEqyhj4YAhsv0Z05UVgo8wqc-7-_7mo","authDomain":"mosimo-online.firebaseapp.com","databaseURL":"https://mosimo-online.firebaseio.com","avatarEvent":"1","syncSwitchStart":"11","syncSwitchEnd":"20","syncVariableStart":"11","syncVariableEnd":"20"}},
 {"name":"DataCacheBlocker","status":true,"description":"キャッシュを阻止します。（dataフォルダのみ）","parameters":{}},
 {"name":"SymbolReplacer","status":false,"description":"ファイル名の!と$を別の語に置き換えます。","parameters":{"method":"restore","exclamationmark":"Exc_","dollar":"Dol_"}},
 {"name":"MakeScreenCapture","status":true,"description":"画面キャプチャ管理プラグイン","parameters":{"PNGキャプチャキー":"F6","JPEGキャプチャキー":"F7","WEBPキャプチャキー":"F9","ファイル名":"image","出力場所":"/captures","保存形式":"png","連番桁数":"2","タイムスタンプ":"ON","署名":"","署名サイズ":"22","署名画像":"","実行間隔":"0","効果音":""}},
 {"name":"MessageWindowHidden","status":true,"description":"メッセージウィンドウ一時消去プラグイン","parameters":{"ボタン名称":"control"}},
 {"name":"AdjustPictureGraphical","status":true,"description":"ピクチャのグラフィカルな位置調整プラグイン。\nパラメータを変更したら「プロジェクトの保存」（Ctrl+S）","parameters":{"グリッドサイズ":"48","テストマップID":"-1"}},
-{"name":"TMAutoNewGame","status":true,"description":"起動時に自動ではじめからゲームを開始します。\nWeb用ミニゲームなど、タイトルが不要な場合に使えます。","parameters":{"autoNewGame":"1","allwaysOnTop":"0","autoDevTool":"0"}}
+{"name":"TMAutoNewGame","status":true,"description":"起動時に自動ではじめからゲームを開始します。\r\nWeb用ミニゲームなど、タイトルが不要な場合に使えます。","parameters":{"autoNewGame":"1","allwaysOnTop":"0","autoDevTool":"0"}}
 ];
