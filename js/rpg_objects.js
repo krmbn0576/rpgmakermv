@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_objects.js v1.1.0
+// rpg_objects.js v1.3.1
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1693,8 +1693,8 @@ Game_Action.prototype.evalDamageFormula = function(target) {
         var v = $gameVariables._data;
         var sign = ([3, 4].contains(item.damage.type) ? -1 : 1);
         var value = Math.max(eval(item.damage.formula), 0) * sign;
-        if (isNaN(value)) value = 0;
-        return value;
+		if (isNaN(value)) value = 0;
+		return value;
     } catch (e) {
         return 0;
     }
@@ -2621,7 +2621,7 @@ Game_BattlerBase.prototype.mpRate = function() {
 };
 
 Game_BattlerBase.prototype.tpRate = function() {
-    return this.tp / 100;
+    return this.tp / this.maxTp();
 };
 
 Game_BattlerBase.prototype.hide = function() {

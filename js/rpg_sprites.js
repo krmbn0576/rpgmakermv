@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_sprites.js v1.1.0
+// rpg_sprites.js v1.3.1
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -843,7 +843,7 @@ Sprite_Actor.prototype.motionSpeed = function() {
 
 Sprite_Actor.prototype.refreshMotion = function() {
     var actor = this._actor;
-	var motionGuard = Sprite_Actor.MOTIONS['guard'];
+    var motionGuard = Sprite_Actor.MOTIONS['guard'];
     if (actor) {
         if (this._motion === motionGuard && !BattleManager.isInputting()) {
                 return;
@@ -1183,6 +1183,7 @@ Sprite_Animation._checker2 = {};
 
 Sprite_Animation.prototype.initialize = function() {
     Sprite.prototype.initialize.call(this);
+    this._reduceArtifacts = true;
     this.initMembers();
 };
 
@@ -1906,6 +1907,7 @@ Sprite_Picture.prototype.initialize = function(pictureId) {
     Sprite.prototype.initialize.call(this);
     this._pictureId = pictureId;
     this._pictureName = '';
+    this._isPicture = true;
     this.update();
 };
 
@@ -2290,7 +2292,11 @@ Spriteset_Map.prototype.createParallax = function() {
 };
 
 Spriteset_Map.prototype.createTilemap = function() {
-    this._tilemap = new Tilemap();
+    if (Graphics.isWebGL()) {
+        this._tilemap = new ShaderTilemap();
+    } else {
+        this._tilemap = new Tilemap();
+    }
     this._tilemap.tileWidth = $gameMap.tileWidth();
     this._tilemap.tileHeight = $gameMap.tileHeight();
     this._tilemap.setData($gameMap.width(), $gameMap.height(), $gameMap.data());
@@ -2307,8 +2313,12 @@ Spriteset_Map.prototype.loadTileset = function() {
         for (var i = 0; i < tilesetNames.length; i++) {
             this._tilemap.bitmaps[i] = ImageManager.loadTileset(tilesetNames[i]);
         }
-        this._tilemap.flags = $gameMap.tilesetFlags();
-        this._tilemap.refresh();
+        var newTilesetFlags = $gameMap.tilesetFlags();
+        this._tilemap.refreshTileset();
+        if (!this._tilemap.flags.equals(newTilesetFlags)) {
+            this._tilemap.refresh();
+        }
+        this._tilemap.flags = newTilesetFlags;
     }
 };
 
