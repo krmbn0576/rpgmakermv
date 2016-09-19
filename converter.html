@@ -1,0 +1,499 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>2000→MVキャラコンバーター</title>
+</head>
+<body>
+    <h1>2000→MVキャラコンバーター</h1>
+    <ul>
+        <li>2000のキャラチップを放り込むとMVのキャラチップになって出てきます。</li>
+        <li>画像の拡大方式は「そのまま拡大（ドット絵のまま）」と「きれいに拡大（普通絵っぽい）」から選べます。</li>
+        <li>拡大倍率は２倍、３倍から選べます。ＭＶのマップ上に表示するなら２倍、2000のマップを移植する場合は３倍がおすすめです。</li>
+        <li>何気に顔グラにも対応してますが、キャラと違いドット絵ではないので拡大方式・倍率は選べません。</li>
+        <li>「きれいに拡大」のスクリプトは<a href="http://ohhiru.info/upscale/">ドット絵をアップスケールするやつ</a>よりお借りしました。ありがとうございます！</li>
+        <li>検索などから来た方は<a href="homepage.html">くらむぼんのホームページ</a>もぜひ寄ってください！MV用プラグインとか置いてます。</li>
+    </ul>
+    <ol>
+        <li>拡大方式および倍率を選んでチェックを入れる</li>
+        <li>「画像を選択」で2000キャラチップ（or顔グラ）を放り込む（画面に直接ドラッグ＆ドロップしてもＯＫ）</li>
+        <li>下にMVのキャラチップになって表示されるので右クリックして「名前を付けて画像を保存」</li>
+        <li>１～３を気が済むまで繰り返す（出力画像は一番下にどんどん追加されていきます）</li>
+    </ol>
+    <button type="button" id="dummy">画像を選択</button>
+    <input type="file" id="image" style="display: none;" />
+    　　　拡大方式－
+    <label><input type="radio" name="upscale" id="dot" />：そのまま拡大</label>
+    <label><input type="radio" name="upscale" id="xbr" />：きれいに拡大</label>
+    　　　拡大倍率－
+    <label><input type="radio" name="scale" id="twice" />：２倍</label>
+    <label><input type="radio" name="scale" id="three" />：３倍</label>
+    <div id="xBRscript" style="display: none;">
+        //このタグ内のスクリプトは「ドット絵をアップスケールするやつ」よりお借りしました。ありがとうございます！
+        (function () {
+            "use strict";
+
+            var global = new Function("return this")();
+
+            var YMASK = 0xff0000;
+            var UMASK = 0x00ff00;
+            var VMASK = 0x0000ff;
+
+            var RGBtoYUV = new Uint32Array(1 << 24);
+
+            for (var bg = -255; bg < 256; bg++) {
+                for (var rg = -255; rg < 256; rg++) {
+                    var u = (((-169 * rg + 500 * bg) / 1000) | 0) + 128;
+                    var v = (((500 * rg - 81 * bg) / 1000) | 0) + 128;
+                    var startg = Math.max(-bg, -rg, 0);
+                    var endg = Math.min(255 - bg, 255 - rg, 255);
+                    var y = (((299 * rg + 1000 * startg + 114 * bg) | 0) / 1000);
+                    var c = bg + (rg << 16) + 0x010101 * startg;
+
+                    for (var g = startg; g <= endg; g++) {
+                        RGBtoYUV[c] = ((y++) << 16) + (u << 8) + v;
+                        c += 0x010101;
+                    }
+                }
+            }
+
+            function pixelDiff(x, y) {
+                var yuv1 = RGBtoYUV[x & 0xffffff];
+                var yuv2 = RGBtoYUV[y & 0xffffff];
+
+                return (Math.abs((yuv1 & YMASK) - (yuv2 & YMASK)) >> 16) |
+                (Math.abs((yuv1 & UMASK) - (yuv2 & UMASK)) >> 8) |
+                Math.abs((yuv1 & VMASK) - (yuv2 & VMASK));
+            }
+
+            function alphaBlendBase(a, b, m, s) {
+                var total = m + s;
+
+                return (((((a) & 0xff) * m + ((b) & 0xff) * s) / total)) |
+                (((((a >> 8) & 0xff) * m + ((b >> 8) & 0xff) * s) / total) << 8) |
+                (((((a >> 16) & 0xff) * m + ((b >> 16) & 0xff) * s) / total) << 16) |
+                (((((a >> 24) & 0xff) * m + ((b >> 24) & 0xff) * s) / total) << 24);
+            }
+
+            function alphaBlend32W(a, b) {
+                return alphaBlendBase(a, b, 7, 1);
+            }
+
+            function alphaBlend64W(a, b) {
+                return alphaBlendBase(a, b, 3, 1);
+            }
+
+            function alphaBlend128W(a, b) {
+                return alphaBlendBase(a, b, 1, 1);
+            }
+
+            function alphaBlend192W(a, b) {
+                return alphaBlendBase(a, b, 1, 3);
+            }
+
+            function alphaBlend224W(a, b) {
+                return alphaBlendBase(a, b, 1, 7);
+            }
+
+            function df(A, B) {
+                return pixelDiff(A, B);
+            }
+            function eq(A, B) {
+                return (df(A, B) < 155);
+            }
+
+            function filter2x(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, N0, N1, N2, N3) {
+                if (PE != PH && PE != PF) {
+                    var e = df(PE, PC) + df(PE, PG) + df(PI, H5) + df(PI, F4) + (df(PH, PF) << 2);
+                    var i = df(PH, PD) + df(PH, I5) + df(PF, I4) + df(PF, PB) + (df(PE, PI) << 2);
+                    if (e <= i) {
+                        var px = df(PE, PF) <= df(PE, PH) ? PF : PH;
+                        if (e < i && (!eq(PF, PB) && !eq(PH, PD) || eq(PE, PI) && (!eq(PF, I4) && !eq(PH, I5)) || eq(PE, PG) || eq(PE, PC))) {
+                            var ke = df(PF, PG);
+                            var ki = df(PH, PC);
+                            var left = ke << 1 <= ki && PE != PG && PD != PG;
+                            var up = ke >= ki << 1 && PE != PC && PB != PC;
+                            if (left && up) {
+                                E[N3] = alphaBlend224W(E[N3], px);
+                                E[N2] = alphaBlend64W(E[N2], px);
+                                E[N1] = E[N2];
+                            } else if (left) {
+                                E[N3] = alphaBlend192W(E[N3], px);
+                                E[N2] = alphaBlend64W(E[N2], px);
+                            } else if (up) {
+                                E[N3] = alphaBlend192W(E[N3], px);
+                                E[N1] = alphaBlend64W(E[N1], px);
+                            } else {
+                                E[N3] = alphaBlend128W(E[N3], px);
+                            }
+                        } else {
+                            E[N3] = alphaBlend128W(E[N3], px);
+                        }
+                    }
+                }
+            }
+
+            function FILT3(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, N0, N1, N2, N3, N4, N5, N6, N7, N8) {
+                if (PE != PH && PE != PF) {
+                    var e = df(PE, PC) + df(PE, PG) + df(PI, H5) + df(PI, F4) + (df(PH, PF) << 2);
+                    var i = df(PH, PD) + df(PH, I5) + df(PF, I4) + df(PF, PB) + (df(PE, PI) << 2);
+                    if (e <= i) {
+                        var px = df(PE, PF) <= df(PE, PH) ? PF : PH;
+                        if (e < i && (!eq(PF, PB) && !eq(PF, PC) || !eq(PH, PD) && !eq(PH, PG) || eq(PE, PI) && (!eq(PF, F4) && !eq(PF, I4) || !eq(PH, H5) && !eq(PH, I5)) || eq(PE, PG) || eq(PE, PC))) {
+                            var ke = df(PF, PG);
+                            var ki = df(PH, PC);
+                            var left = ke << 1 <= ki && PE != PG && PD != PG;
+                            var up = ke >= ki << 1 && PE != PC && PB != PC;
+                            if (left && up) {
+                                E[N7] = alphaBlend192W(E[N7], px);
+                                E[N6] = alphaBlend64W(E[N6], px);
+                                E[N5] = E[N7];
+                                E[N2] = E[N6];
+                                E[N8] = px;
+                            } else if (left) {
+                                E[N7] = alphaBlend192W(E[N7], px);
+                                E[N5] = alphaBlend64W(E[N5], px);
+                                E[N6] = alphaBlend64W(E[N6], px);
+                                E[N8] = px;
+                            } else if (up) {
+                                E[N5] = alphaBlend192W(E[N5], px);
+                                E[N7] = alphaBlend64W(E[N7], px);
+                                E[N2] = alphaBlend64W(E[N2], px);
+                                E[N8] = px;
+                            } else {
+                                E[N8] = alphaBlend224W(E[N8], px);
+                                E[N5] = alphaBlend32W(E[N5], px);
+                                E[N7] = alphaBlend32W(E[N7], px);
+                            }
+                        } else {
+                            E[N8] = alphaBlend128W(E[N8], px);
+                        }
+                    }
+                }
+            }
+
+            function FILT4(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, N15, N14, N11, N3, N7, N10, N13, N12, N9, N6, N2, N1, N5, N8, N4, N0) {
+                if (PE != PH && PE != PF) {
+                    var e = df(PE, PC) + df(PE, PG) + df(PI, H5) + df(PI, F4) + (df(PH, PF) << 2);
+                    var i = df(PH, PD) + df(PH, I5) + df(PF, I4) + df(PF, PB) + (df(PE, PI) << 2);
+                    if (e <= i) {
+                        var px = df(PE, PF) <= df(PE, PH) ? PF : PH;
+                        if (e < i && (!eq(PF, PB) && !eq(PH, PD) || eq(PE, PI) && (!eq(PF, I4) && !eq(PH, I5)) || eq(PE, PG) || eq(PE, PC))) {
+                            var ke = df(PF, PG);
+                            var ki = df(PH, PC);
+                            var left = ke << 1 <= ki && PE != PG && PD != PG;
+                            var up = ke >= ki << 1 && PE != PC && PB != PC;
+                            if (left && up) {
+                                E[N13] = alphaBlend192W(E[N13], px);
+                                E[N12] = alphaBlend64W(E[N12], px);
+                                E[N15] = E[N14] = E[N11] = px;
+                                E[N10] = E[N3] = E[N12];
+                                E[N7] = E[N13];
+                            } else if (left) {
+                                E[N11] = alphaBlend192W(E[N11], px);
+                                E[N13] = alphaBlend192W(E[N13], px);
+                                E[N10] = alphaBlend64W(E[N10], px);
+                                E[N12] = alphaBlend64W(E[N12], px);
+                                E[N14] = px;
+                                E[N15] = px;
+                            } else if (up) {
+                                E[N14] = alphaBlend192W(E[N14], px);
+                                E[N7] = alphaBlend192W(E[N7], px);
+                                E[N10] = alphaBlend64W(E[N10], px);
+                                E[N3] = alphaBlend64W(E[N3], px);
+                                E[N11] = px;
+                                E[N15] = px;
+                            } else {
+                                E[N11] = alphaBlend128W(E[N11], px);
+                                E[N14] = alphaBlend128W(E[N14], px);
+                                E[N15] = px;
+                            }
+                        } else {
+                            E[N15] = alphaBlend128W(E[N15], px);
+                        }
+                    }
+                }
+            }
+
+            var xBR = {};
+
+            xBR.xBR = function (input, output, n, id, jobs) {
+                id = id || 0;
+                jobs = jobs || 1;
+                var slice_start = (input.height * id) / jobs;
+                var slice_end = (input.height * (id + 1)) / jobs;
+                var inputData = new Uint32Array(input.data.buffer);
+                var outputData = new Uint32Array(output.data.buffer);
+                var nl = output.width;
+                var nl1 = nl + nl;
+                var nl2 = nl1 + nl;
+
+                for (var y = slice_start; y < slice_end; y++) {
+                    var line0 = (y - 2) * input.width;
+                    var line1 = (y - 1) * input.width;
+                    var line2 = (y) * input.width;
+                    var line3 = (y + 1) * input.width;
+                    var line4 = (y + 2) * input.width;
+
+                    if (y <= 1) {
+                        if (y === 0) {
+                            line0 = line1 = line2;
+                        } else {
+                            line0 = line1;
+                        }
+                    }
+
+                    if (y >= input.height - 2) {
+                        if (y === input.height - 1) {
+                            line4 = line3 = line2;
+                        } else {
+                            line4 = line3;
+                        }
+                    }
+
+                    for (var x = 0; x < input.width; x++) {
+                        var E = outputData.subarray(y * output.width * n + x * n);
+
+                        var pcurrent = x;
+                        var B1 = inputData[line0 + pcurrent];
+                        var PB = inputData[line1 + pcurrent];
+                        var PE = inputData[line2 + pcurrent];
+                        var PH = inputData[line3 + pcurrent];
+                        var H5 = inputData[line4 + pcurrent];
+
+                        var pprev = x - (x > 0 ? 1 : 0);
+                        var A1 = inputData[line0 + pprev];
+                        var PA = inputData[line1 + pprev];
+                        var PD = inputData[line2 + pprev];
+                        var PG = inputData[line3 + pprev];
+                        var G5 = inputData[line4 + pprev];
+
+                        var pprev2 = pprev - (x > 1 ? 1 : 0);
+                        var A0 = inputData[line1 + pprev2];
+                        var D0 = inputData[line2 + pprev2];
+                        var G0 = inputData[line3 + pprev2];
+
+                        var pnext = x + 1 - (x === input.width - 1 ? 1 : 0);
+                        var C1 = inputData[line0 + pnext];
+                        var PC = inputData[line1 + pnext];
+                        var PF = inputData[line2 + pnext];
+                        var PI = inputData[line3 + pnext];
+                        var I5 = inputData[line4 + pnext];
+
+                        var pnext2 = pnext + 1 - (x >= input.width - 2 ? 1 : 0);
+                        var C4 = inputData[line1 + pnext2];
+                        var F4 = inputData[line2 + pnext2];
+                        var I4 = inputData[line3 + pnext2];
+
+                        if (n === 2) {
+                            E[0] = E[1] =     // 0, 1
+                            E[nl] = E[nl + 1] = PE; // 2, 3
+
+                            filter2x(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, 0, 1, nl, nl + 1);
+                            filter2x(E, PE, PC, PF, PB, PI, PA, PH, PD, PG, I4, A1, I5, H5, A0, D0, B1, C1, F4, C4, G5, G0, nl, 0, nl + 1, 1);
+                            filter2x(E, PE, PA, PB, PD, PC, PG, PF, PH, PI, C1, G0, C4, F4, G5, H5, D0, A0, B1, A1, I4, I5, nl + 1, nl, 1, 0);
+                            filter2x(E, PE, PG, PD, PH, PA, PI, PB, PF, PC, A0, I5, A1, B1, I4, F4, H5, G5, D0, G0, C1, C4, 1, nl + 1, 0, nl);
+                        } else if (n == 3) {
+                            E[0] = E[1] = E[2] =     // 0, 1, 2
+                            E[nl] = E[nl + 1] = E[nl + 2] =     // 3, 4, 5
+                            E[nl1] = E[nl1 + 1] = E[nl1 + 2] = PE; // 6, 7, 8
+
+                            FILT3(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, 0, 1, 2, nl, nl + 1, nl + 2, nl1, nl1 + 1, nl1 + 2);
+                            FILT3(E, PE, PC, PF, PB, PI, PA, PH, PD, PG, I4, A1, I5, H5, A0, D0, B1, C1, F4, C4, G5, G0, nl1, nl, 0, nl1 + 1, nl + 1, 1, nl1 + 2, nl + 2, 2);
+                            FILT3(E, PE, PA, PB, PD, PC, PG, PF, PH, PI, C1, G0, C4, F4, G5, H5, D0, A0, B1, A1, I4, I5, nl1 + 2, nl1 + 1, nl1, nl + 2, nl + 1, nl, 2, 1, 0);
+                            FILT3(E, PE, PG, PD, PH, PA, PI, PB, PF, PC, A0, I5, A1, B1, I4, F4, H5, G5, D0, G0, C1, C4, 2, nl + 2, nl1 + 2, 1, nl + 1, nl1 + 1, 0, nl, nl1);
+                        } else if (n == 4) {
+                            E[0] = E[1] = E[2] = E[3] =     //  0,  1,  2,  3
+                            E[nl] = E[nl + 1] = E[nl + 2] = E[nl + 3] =     //  4,  5,  6,  7
+                            E[nl1] = E[nl1 + 1] = E[nl1 + 2] = E[nl1 + 3] =     //  8,  9, 10, 11
+                            E[nl2] = E[nl2 + 1] = E[nl2 + 2] = E[nl2 + 3] = PE; // 12, 13, 14, 15
+
+                            FILT4(E, PE, PI, PH, PF, PG, PC, PD, PB, PA, G5, C4, G0, D0, C1, B1, F4, I4, H5, I5, A0, A1, nl2 + 3, nl2 + 2, nl1 + 3, 3, nl + 3, nl1 + 2, nl2 + 1, nl2, nl1 + 1, nl + 2, 2, 1, nl + 1, nl1, nl, 0);
+                            FILT4(E, PE, PC, PF, PB, PI, PA, PH, PD, PG, I4, A1, I5, H5, A0, D0, B1, C1, F4, C4, G5, G0, 3, nl + 3, 2, 0, 1, nl + 2, nl1 + 3, nl2 + 3, nl1 + 2, nl + 1, nl, nl1, nl1 + 1, nl2 + 2, nl2 + 1, nl2);
+                            FILT4(E, PE, PA, PB, PD, PC, PG, PF, PH, PI, C1, G0, C4, F4, G5, H5, D0, A0, B1, A1, I4, I5, 0, 1, nl, nl2, nl1, nl + 1, 2, 3, nl + 2, nl1 + 1, nl2 + 1, nl2 + 2, nl1 + 2, nl + 3, nl1 + 3, nl2 + 3);
+                            FILT4(E, PE, PG, PD, PH, PA, PI, PB, PF, PC, A0, I5, A1, B1, I4, F4, H5, G5, D0, G0, C1, C4, nl2, nl1, nl2 + 1, nl2 + 3, nl2 + 2, nl1 + 1, nl, 0, nl + 1, nl1 + 2, nl1 + 3, nl + 3, nl + 2, 1, 2, 3);
+                        }
+                    }
+                }
+            };
+
+            xBR.xBR2x = function (input, output) {
+                xBR.xBR(input, output, 2);
+            };
+
+            xBR.xBR3x = function (input, output) {
+                xBR.xBR(input, output, 3);
+            };
+
+            xBR.xBR4x = function (input, output) {
+                xBR.xBR(input, output, 4);
+            };
+
+            global.xBR = xBR;
+        })();
+
+        onmessage = function (event) {
+            var input = event.data.input;
+            var output = event.data.output;
+            event.data.scale === 2 ? xBR.xBR2x(input, output) : xBR.xBR3x(input, output);
+            postMessage(output, [output.data.buffer]);
+        }
+    </div>
+    <script>
+        var xBRscript = document.getElementById("xBRscript").innerHTML.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+        try {
+            var worker = new Worker(window.URL.createObjectURL(new Blob([xBRscript], { type: "text/javascript" })));
+        } catch (err) {
+            //「IE + オフライン + きれいに拡大」の組み合わせはここでエラーです（揉み潰す）
+        }
+        var dot = document.getElementById("dot");
+        dot.checked = true;
+        var twice = document.getElementById("twice");
+        twice.checked = true;
+        var image = document.getElementById("image");
+
+        document.getElementById("dummy").onclick = function () {
+            image.click();
+        }
+
+        image.onchange = function (event) {
+            urlToImage(URL.createObjectURL((event.dataTransfer || event.currentTarget).files[0]), function (image) {
+                if (image.width == 288 && image.height == 256) {
+                    convert(image, function (result) {
+                        urlToImage(result, function (image) {
+                            document.body.appendChild(image);
+                        });
+                    });
+                } else if (image.width == 192 && image.height == 192) {
+                    urlToImage(convertFace(image), function (image) {
+                        document.body.appendChild(image);
+                    });
+                } else {
+                    var p = document.createElement('p');
+                    p.innerHTML = '画像のサイズが正しくありません。キャラチップは288*256pxのみ、顔グラは192*192pxのみ受け付けます。';
+                    document.body.appendChild(p);
+                }
+            });
+            image.value = "";
+        }
+
+        ondragover = function (event) {
+            event.preventDefault();
+        };
+
+        ondrop = function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            image.onchange(event);
+        };
+
+        onload = function() {dot.checked = true;twice.checked = true;};
+
+        function urlToImage(src, callback) {
+            var image = new Image();
+            image.onload = function () {
+                callback(image);
+            };
+            image.src = src;
+        }
+
+        function convert(image, callback) {
+            var canvas = document.createElement("canvas");
+            var ctx = canvas.getContext("2d");
+
+            canvas.width = image.width;
+            canvas.height = image.height;
+
+            ctx.drawImage(image, 0, 0);
+            var charaData = [];
+
+            for (var y = 0; y < image.height; y += 32) {
+                for (var x = 0; x < image.width; x += 24) {
+                    charaData.push(ctx.getImageData(x, y, 24, 32));
+                    transparent(charaData[charaData.length - 1]);
+                }
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width += 8 * 12;
+
+            for (var y = 0; y < 8; y++) {
+                for (var x = 0; x < 12; x++) {
+                    var trueY = y % 4 === 2 || y % 4 === 3 ? y - 2 : y % 4 === 1 ? y + 1 : y + 3;
+                    ctx.putImageData(charaData.shift(), x * 32 + 4, trueY * 32);
+                }
+            }
+
+            var input = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            canvas.width *= twice.checked ? 2 : 3;
+            canvas.height *= twice.checked ? 2 : 3;
+            var output = ctx.createImageData(canvas.width, canvas.height);
+            if (dot.checked) {
+                twice.checked ? dot2x(input, output) : dot3x(input, output);
+                ctx.putImageData(output, 0, 0);
+                callback(canvas.toDataURL());
+            } else {
+                worker.onmessage = function (event) {
+                    ctx.putImageData(event.data, 0, 0);
+                    callback(canvas.toDataURL());
+                }
+                worker.postMessage({ input: input, output: output, scale: twice.checked ? 2 : 3 }, [input.data.buffer, output.data.buffer]);
+            }
+        }
+
+        function transparent(imageData) {
+            var data = imageData.data;
+
+            for (var y = 0; y < imageData.height; y++) {
+                for (var x = 0; x < imageData.width; x++) {
+                    var i = (x + y * imageData.width) * 4;
+                    if (data[i] === data[0] && data[i + 1] === data[1] && data[i + 2] === data[2]) {
+                        data[i + 3] = 0;
+                    }
+                }
+            }
+        }
+
+		function dot2x(input, output) {
+            var inputData = new Uint32Array(input.data.buffer);
+            var outputData = new Uint32Array(output.data.buffer);
+
+            for (var y = 0; y < input.height; y++) {
+                for (var x = 0; x < input.width; x++) {
+                    var i = (x + y * input.width * 2) * 2;
+                    outputData[i] = outputData[i + 1] = outputData[i + input.width * 2] =
+                    outputData[i + 1 + input.width * 2] = inputData[x + y * input.width];
+                }
+            }
+        }
+
+        function dot3x(input, output) {
+            var inputData = new Uint32Array(input.data.buffer);
+            var outputData = new Uint32Array(output.data.buffer);
+
+            for (var y = 0; y < input.height; y++) {
+                for (var x = 0; x < input.width; x++) {
+                    var i = (x + y * input.width * 3) * 3;
+                    outputData[i] = outputData[i + 1] = outputData[i + 2] = outputData[i + input.width * 3] =
+                    outputData[i + 1 + input.width * 3] = outputData[i + 2 + input.width * 3] =
+                    outputData[i + input.width * 6] = outputData[i + 1 + input.width * 6] =
+                    outputData[i + 2 + input.width * 6] = inputData[x + y * input.width];
+                }
+            }
+        }
+
+        function convertFace(image) {
+            var canvas = document.createElement("canvas");
+            var ctx = canvas.getContext("2d");
+
+            canvas.width = image.width * 3;
+            canvas.height = image.height * 3;
+
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL();
+        }
+        </script>
+</body>
+</html>

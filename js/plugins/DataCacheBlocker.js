@@ -28,6 +28,7 @@
  */
 
 (function() {
+	'use strict';
 	var _DataManager_loadDataFile = DataManager.loadDataFile;
 	DataManager.loadDataFile = function(name, src) {
 		_DataManager_loadDataFile.call(this, name, src + '?' + Date.now());
