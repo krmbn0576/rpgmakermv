@@ -86,7 +86,7 @@
 		if (Input.isRepeated('control')) active = this.active = !this.active;
 		for (var i = 0; i < this._list.length; i++) {
 			var k = this._list[i].symbol.charAt(0);
-			var n = this._list[i].symbol.charAt(1);
+			var n = this._list[i].symbol.slice(1);
 			if (this.active && this.index() === i) {
 				if (k === 'S') {
 					if (Input.isRepeated('ok') || Input.isRepeated('left') || Input.isRepeated('right')) {
