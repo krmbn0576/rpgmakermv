@@ -74,7 +74,10 @@
 				this.addCommand('', 'V' + variableId);
 			}
 		}
-		if (!this._list.length) this.hide();
+		if (!this._list.length) {
+			this.hide();
+			active = this.active = false;
+		}
 	};
 
 	Window_Monitor.prototype.isOkEnabled = function() {
@@ -83,7 +86,7 @@
 
 	Window_Monitor.prototype.update = function() {
 		Window_Command.prototype.update.call(this);
-		if (Input.isRepeated('control')) active = this.active = !this.active;
+		if (Input.isTriggered('control') && this.visible) active = this.active = !this.active;
 		for (var i = 0; i < this._list.length; i++) {
 			var k = this._list[i].symbol.charAt(0);
 			var n = this._list[i].symbol.slice(1);
@@ -115,10 +118,10 @@
 			}
 			if (k === 'S') {
 				var name = $dataSystem.switches[n];
-				var newValue = (name ? name : 'S[' + n.padZero(4) + ']') + ':' + ($gameSwitches.value(n) ? '[ON]' : '[OFF]');
+				var newValue = (name || 'S[' + n.padZero(4) + ']') + ':' + ($gameSwitches.value(n) ? '[ON]' : '[OFF]');
 			} else {
 				var name = $dataSystem.variables[n];
-				var newValue = (name ? name : 'V[' + n.padZero(4) + ']') + ':' + $gameVariables.value(n);
+				var newValue = (name || 'V[' + n.padZero(4) + ']') + ':' + $gameVariables.value(n);
 			}
 			if (this._list[i].name !== newValue) {
 				this._list[i].name = newValue;
@@ -169,7 +172,9 @@
 
 	var _Window_Selectable_isOpenAndActive = Window_Selectable.prototype.isOpenAndActive;
 	Window_Selectable.prototype.isOpenAndActive = function() {
-		return !active && _Window_Selectable_isOpenAndActive.apply(this, arguments);
+		if (SceneManager._scene instanceof Scene_Map && active) return false;
+		if (SceneManager._scene instanceof Scene_Battle && active) return false;
+		return _Window_Selectable_isOpenAndActive.apply(this, arguments);
 	};
 
 	var _Game_Player_canMove = Game_Player.prototype.canMove;
