@@ -46,12 +46,18 @@
 	var method = {convert: convert, restore: restore}[name];
 	var exc = parameters['exclamationmark'];
 	var dol = parameters['dollar'];
-	var imgPath = StorageManager.localFileDirectoryPath() + '../img/';
 
 	if (method && Utils.isOptionValid('test') && Utils.isNwjs()) {
+		var imgPath = require('path').dirname(process.mainModule.filename) + '/img/';
 		var fs = require('fs');
 		action(imgPath + 'characters/');
 		action(imgPath + 'parallaxes/');
+		var w = require('nw.gui').Window.get();
+		if (!w.isDevToolsOpen()) {
+			var d = w.showDevTools();
+			d.moveTo(0, 0);
+			w.focus();
+		}
 		if (name === 'convert') console.log('変換成功： ! -> ' + exc + ' , $ -> ' + dol);
 		else console.log('復元成功： ' + exc + ' -> ! , ' + dol + ' -> $');
 	}

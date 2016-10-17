@@ -6,7 +6,7 @@ var $plugins =
 {"name":"111_InputForm","status":true,"description":"フォーム作って文字入力","parameters":{}},
 {"name":"DTextPicture","status":true,"description":"動的文字列ピクチャ生成プラグイン","parameters":{}},
 {"name":"TMNamePop","status":true,"description":"イベントの頭上に文字列を表示する機能を追加します。","parameters":{"backOpacity":"96","fontSize":"20","fontOutlineWidth":"4","fontOutlineColor":"rgba(0, 0, 0, 0.5)","width":"160","useRoundRect":"0","roundRectRadius":"6"}},
-{"name":"QuickMove","status":true,"description":"歩行とジャンプを素早く(2000風に)します。","parameters":{}},
+{"name":"QuickMove","status":true,"description":"歩行とジャンプを軽快に(2000風に)します。","parameters":{}},
 {"name":"OnlineAvatar","status":true,"description":"Firebaseを使ってプレイヤーをオンライン同期します。","parameters":{"apiKey":"AIzaSyAbDEqyhj4YAhsv0Z05UVgo8wqc-7-_7mo","authDomain":"mosimo-online.firebaseapp.com","databaseURL":"https://mosimo-online.firebaseio.com","avatarEvent":"1","syncSwitchStart":"11","syncSwitchEnd":"20","syncVariableStart":"11","syncVariableEnd":"20"}},
 {"name":"DataCacheBlocker","status":true,"description":"キャッシュを阻止します。（dataフォルダのみ）","parameters":{}},
 {"name":"SymbolReplacer","status":false,"description":"ファイル名の!と$を別の語に置き換えます。","parameters":{"method":"restore","exclamationmark":"Exc_","dollar":"Dol_"}},
@@ -15,5 +15,7 @@ var $plugins =
 {"name":"AdjustPictureGraphical","status":true,"description":"ピクチャのグラフィカルな位置調整プラグイン。\nパラメータを変更したら「プロジェクトの保存」（Ctrl+S）","parameters":{"グリッドサイズ":"48","テストマップID":"-1"}},
 {"name":"TMAutoNewGame","status":true,"description":"起動時に自動ではじめからゲームを開始します。\r\nWeb用ミニゲームなど、タイトルが不要な場合に使えます。","parameters":{"autoNewGame":"1","allwaysOnTop":"0","autoDevTool":"0"}},
 {"name":"HyperLink","status":true,"description":"ゲーム中に外部ページへのリンクを貼ります。","parameters":{"description":"Webサイトへのリンク"}},
-{"name":"DebugMonitor","status":true,"description":"スイッチ・変数の状態を画面上にリアルタイム表示します。","parameters":{"monitorX":"0","monitorY":"100","monitorW":"240"}}
+{"name":"DebugMonitor","status":true,"description":"スイッチ・変数の状態を画面上にリアルタイム表示します。","parameters":{"monitorX":"0","monitorY":"100","monitorW":"240"}},
+{"name":"AudioSource","status":true,"description":"音源と聞き手の位置関係に応じて自動的に音量・位相を調節します。","parameters":{"listener":"screen","decay":"85","pan":"10","cutoff":"1"}},
+{"name":"LoopTagChecker","status":false,"description":"bgmとbgsの音楽ファイルにループタグがついているかチェックします。","parameters":{}}
 ];

@@ -427,13 +427,9 @@ function Game_Avatar() {
 			$gameSelfSwitches.setValue(key, false);
 		});
 
-		eventData = JsonEx.makeDeepCopy(eventData);
-		eventData.id = eventId;
-		eventData.x = onlineData.x;
-		eventData.y = onlineData.y;
 		this.eventData = eventData;
-
 		Game_Event.prototype.initialize.call(this, mapId, eventId);
+		this.locate(onlineData.x, onlineData.y);
 		this.setDirection(onlineData.direction);
 		this.setMoveSpeed(onlineData.speed);
 		this.setImage(onlineData.charaName, onlineData.charaIndex);
