@@ -1,6 +1,8 @@
 //=============================================================================
 // AudioSource.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2016/10/18 BGMとBGSの音源化を、一度指定すれば自動調節としました
 //=============================================================================
 
 /*:
@@ -61,9 +63,10 @@
  * 「指定したIDのマップイベントから鳴っている」風に聞こえるように調節します。
  * （0を指定すると「このイベント」から鳴らします）
  * 設置されたラジオから曲が流れている演出などにお使いください。
- * ただし、このコマンドは一回の実行で「一回」調節するだけですので、
- * 音源と聞き手の位置関係に合わせて随時調節して欲しい場合は
- * 「並列処理」でこのプラグインコマンドを毎フレーム実行してください。
+ * 
+ * audiosource bgm reset
+ * audiosource bgs reset
+ * BGM/BGSの音源化を解除し、通常通りの演奏に戻します。
  * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
@@ -77,6 +80,8 @@
 	var pan = +parameters['pan'] || 10;
 	var cutoff = (+parameters['cutoff'] || 1).clamp(0, 100);
 	var listenerEvent = null;
+	var bgmSource = null;
+	var bgsSource = null;
 
 	var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
 	Game_Character.prototype.processMoveCommand = function(command) {
@@ -92,36 +97,51 @@
 		else _Game_Character_processMoveCommand.apply(this, arguments);
 	};
 
+	AudioManager.updateAudioSource = function() {
+		var bgm = this._currentBgm;
+		if (bgmSource && bgm) {
+			var lastVolume = bgm.volume;
+			var lastPan = bgm.pan;
+			adjust(bgm, bgmSource);
+			if (bgm.volume < cutoff) bgm.volume = 0;
+			this.updateBgmParameters(bgm);
+			bgm.volume = lastVolume;
+			bgm.pan = lastPan;
+		}
+		var bgs = this._currentBgs;
+		if (bgsSource && bgs) {
+			var lastVolume = bgs.volume;
+			var lastPan = bgs.pan;
+			adjust(bgs, bgsSource);
+			if (bgs.volume < cutoff) bgs.volume = 0;
+			this.updateBgsParameters(bgs);
+			bgs.volume = lastVolume;
+			bgs.pan = lastPan;
+		}
+	};
+
+	var _Game_Map_update = Game_Map.prototype.update;
+	Game_Map.prototype.update = function(sceneActive) {
+		_Game_Map_update.apply(this, arguments);
+		AudioManager.updateAudioSource();
+	};
+
 	var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 	Game_Interpreter.prototype.pluginCommand = function(command, args) {
 		_Game_Interpreter_pluginCommand.apply(this, arguments);
 		if (command.toLowerCase() === 'audiosource') {
 			switch (args[0].toLowerCase()) {
 			case 'listener':
-				if (args[1].toLowerCase() === 'reset') listenerEvent = null;
+				if (!args[1] || args[1].toLowerCase() === 'reset') listenerEvent = null;
 				else listenerEvent = this.character(+args[1]);
 				break;
 			case 'bgm':
-				var bgm = AudioManager._currentBgm;
-				if (!bgm) return;
-				var lastVolume = bgm.volume;
-				var lastPan = bgm.pan;
-				adjust(bgm, this.character(+args[1]));
-				if (bgm.volume < cutoff) bgm.volume = 0;
-				AudioManager.updateBgmParameters(bgm);
-				bgm.volume = lastVolume;
-				bgm.pan = lastPan;
+				if (!args[1] || args[1].toLowerCase() === 'reset') bgmSource = null;
+				else bgmSource = this.character(+args[1]);
 				break;
 			case 'bgs':
-				var bgs = AudioManager._currentBgs;
-				if (!bgs) return;
-				var lastVolume = bgs.volume;
-				var lastPan = bgs.pan;
-				adjust(bgs, this.character(+args[1]));
-				if (bgs.volume < cutoff) bgs.volume = 0;
-				AudioManager.updateBgsParameters(bgs);
-				bgs.volume = lastVolume;
-				bgs.pan = lastPan;
+				if (!args[1] || args[1].toLowerCase() === 'reset') bgsSource = null;
+				else bgsSource = this.character(+args[1]);
 				break;
 			default:
 				break;
