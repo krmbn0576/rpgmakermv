@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_managers.js v1.3.1
+// rpg_managers.js v1.3.2
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1738,6 +1738,7 @@ SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
         case 116:   // F5
             if (Utils.isNwjs()) {
+                window.alert($gameSystem && $gameSystem.isJapanese() ? "リロードを実行します。ゲームパッドを使用している場合、パッドの接続が途切れることがあります" : "Reloading the game with a gamepad connected will cause a disconnect."); // TODO: Get properly translated
                 location.reload();
             }
             break;
@@ -2343,13 +2344,14 @@ BattleManager.invokeCounterAttack = function(subject, target) {
     action.setAttack();
     action.apply(subject);
     this._logWindow.displayCounter(target);
-    this._logWindow.displayActionResults(subject, subject);
+    this._logWindow.displayActionResults(target, subject);
 };
 
 BattleManager.invokeMagicReflection = function(subject, target) {
+	this._action._reflectionTarget = target;
     this._logWindow.displayReflection(target);
     this._action.apply(subject);
-    this._logWindow.displayActionResults(subject, subject);
+    this._logWindow.displayActionResults(target, subject);
 };
 
 BattleManager.applySubstitute = function(target) {
