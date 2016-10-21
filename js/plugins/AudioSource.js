@@ -3,6 +3,7 @@
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
 // 2016/10/18 BGMとBGSの音源化を、一度指定すれば自動調節としました
+// 2016/10/21 音量・位相調節の距離測定単位をマス単位からドット単位に変更しました
 //=============================================================================
 
 /*:
@@ -170,8 +171,8 @@
 					break;
 			}
 		}
-		var dx = source.deltaXFrom(listenerX);
-		var dy = source.deltaYFrom(listenerY);
+		var dx = $gameMap.deltaX(source._realX, listenerX);
+		var dy = $gameMap.deltaY(source._realY, listenerY);
 		var d = Math.sqrt(dx * dx + dy * dy);
 		if (d > 1) audio.volume *= Math.pow(decay / 100, d - 1);
 		audio.pan = (dx * pan).clamp(-100, 100);
