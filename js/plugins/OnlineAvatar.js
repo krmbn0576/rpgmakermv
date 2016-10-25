@@ -1,6 +1,9 @@
 //=============================================================================
 // OnlineAvatar.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// （これ以前の更新履歴は記録していません）
+// 2016/10/25 スイッチ・変数同期時、ツクール上とサーバー上でデータが食い違う不具合を修正しました
 //=============================================================================
 
 /*:
@@ -386,14 +389,14 @@ function Game_Avatar() {
 	var _Game_Switches_setValue = Game_Switches.prototype.setValue;
 	Game_Switches.prototype.setValue = function(switchId, value, byOnline) {
 		_Game_Switches_setValue.call(this, switchId, value);
-		if (!byOnline) OnlineManager.sendSwitch(switchId, value);
+		if (!byOnline) OnlineManager.sendSwitch(switchId, this.value(switchId));
 	};
 
 	//変数同期
 	var _Game_Variables_setValue = Game_Variables.prototype.setValue;
 	Game_Variables.prototype.setValue = function(variableId, value, byOnline) {
 		_Game_Variables_setValue.call(this, variableId, value);
-		if (!byOnline) OnlineManager.sendVariable(variableId, value);
+		if (!byOnline) OnlineManager.sendVariable(variableId, this.value(variableId));
 	};
 
 	//スイッチ・変数の初期化時に、再同期処理（タイミングはスイッチが代表する）
