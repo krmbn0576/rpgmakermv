@@ -1,6 +1,8 @@
 //=============================================================================
 // DebugMonitor.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2016/10/25 リアルタイム変更モードの起動キーをCtrlからTabに変更しました
 //=============================================================================
 
 /*:
@@ -29,8 +31,8 @@
  * 　　（監視対象に設定すると右端に*マークが表示されます）
  * ３．デバッグメニューを閉じると指定座標にモニターが現れ、監視対象が表示されます
  * 　　（通常のマップ上か、バトル中のみ表示されます。メニューや店などは非対応）
- * ４．Ctrlキーを押すと、監視対象の値をリアルタイムに変更できるモードになります
- * 　　（操作方法は普通のデバッグメニューと同じです。再度Ctrlで解除）
+ * ４．Tabキーを押すと、監視対象の値をリアルタイムに変更できるモードになります
+ * 　　（操作方法は普通のデバッグメニューと同じです。再度Tabで解除）
  * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
@@ -66,12 +68,12 @@
 	Window_Monitor.prototype.makeCommandList = function() {
 		for (var switchId in switches) {
 			if (switches[switchId]) {
-				this.addCommand('', 'S' + switchId);
+				this.addCommand('', 'S', true, switchId);
 			}
 		}
 		for (var variableId in variables) {
 			if (variables[variableId]) {
-				this.addCommand('', 'V' + variableId);
+				this.addCommand('', 'V', true, variableId);
 			}
 		}
 		if (!this._list.length) {
@@ -86,10 +88,10 @@
 
 	Window_Monitor.prototype.update = function() {
 		Window_Command.prototype.update.call(this);
-		if (Input.isTriggered('control') && this.visible) active = this.active = !this.active;
+		if (Input.isTriggered('tab') && this.visible) active = this.active = !this.active;
 		for (var i = 0; i < this._list.length; i++) {
-			var k = this._list[i].symbol.charAt(0);
-			var n = this._list[i].symbol.slice(1);
+			var k = this._list[i].symbol;
+			var n = this._list[i].ext;
 			if (this.active && this.index() === i) {
 				if (k === 'S') {
 					if (Input.isRepeated('ok') || Input.isRepeated('left') || Input.isRepeated('right')) {
