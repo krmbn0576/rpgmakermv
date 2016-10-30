@@ -49,6 +49,7 @@
 	var switches = {};
 	var variables = {};
 
+	//モニターの定義。Tabキーでリアルタイム変更モード
 	function Window_Monitor() {
 		this.initialize.apply(this, arguments);
 	}
@@ -142,6 +143,7 @@
 
 
 
+	//F9キーで出せるデバッグメニューを拡張し、Shiftキーで監視対象に登録できるようにする
 	var _Window_DebugEdit_update = Window_DebugEdit.prototype.update;
 	Window_DebugEdit.prototype.update = function() {
 		_Window_DebugEdit_update.apply(this, arguments);
@@ -172,6 +174,7 @@
 
 
 
+	//リアルタイム変更モードの時、他のメニューのカーソルが動いたりプレイヤーが歩いたりしないようにする
 	var _Window_Selectable_isOpenAndActive = Window_Selectable.prototype.isOpenAndActive;
 	Window_Selectable.prototype.isOpenAndActive = function() {
 		if (SceneManager._scene instanceof Scene_Map && active) return false;
@@ -186,6 +189,7 @@
 
 
 
+	//モニターウインドウをマップorバトルシーンに登録
 	var _Scene_Map_createAllWindows = Scene_Map.prototype.createAllWindows;
 	Scene_Map.prototype.createAllWindows = function() {
 		_Scene_Map_createAllWindows.apply(this, arguments);

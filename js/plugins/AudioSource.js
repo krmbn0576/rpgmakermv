@@ -84,6 +84,7 @@
 	var bgmSource = null;
 	var bgsSource = null;
 
+	//効果音の音量調節（マップイベントのルート設定から鳴らした時のみ）
 	var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
 	Game_Character.prototype.processMoveCommand = function(command) {
 		if (command.code === Game_Character.ROUTE_PLAY_SE) {
@@ -98,6 +99,7 @@
 		else _Game_Character_processMoveCommand.apply(this, arguments);
 	};
 
+	//BGM、BGSの音量調節（毎フレーム）
 	AudioManager.updateAudioSource = function() {
 		var bgm = this._currentBgm;
 		if (bgmSource && bgm) {
@@ -150,6 +152,7 @@
 		}
 	};
 
+	//実際に音量調節を担当する関数。第一引数にオーディオデータ、第二引数に音源キャラクターを指定する
 	function adjust(audio, source) {
 		if (!source) throw new Error('audiosourceエラー：音源となるイベントが存在しません');
 		var listenerX, listenerY;
