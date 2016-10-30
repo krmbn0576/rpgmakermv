@@ -1,35 +1,38 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="main.css">
     <title>2000→MVキャラ素材コンバーター</title>
 </head>
 <body>
     <h1>2000→MVキャラ素材コンバーター</h1>
     <ul>
-        <li>2000のキャラチップを放り込むとMVのキャラチップになって出てきます。</li>
-        <li>画像の拡大方式は「そのまま拡大（ドット絵のまま）」と「きれいに拡大（普通絵っぽい）」から選べます。</li>
-        <li>拡大倍率は２倍、３倍から選べます。ＭＶのマップ上に表示するなら２倍、2000のマップを移植する場合は３倍がおすすめです。</li>
-        <li>何気に顔グラにも対応してますが、キャラと違いドット絵ではないので拡大方式・倍率は選べません。</li>
-        <li>「きれいに拡大」のスクリプトは<a href="http://ohhiru.info/upscale/">ドット絵をアップスケールするやつ</a>よりお借りしました。ありがとうございます！</li>
+        <li>RPGツクール2000のキャラチップを放り込むとRPGツクールMVのキャラチップになって出てきます。</li>
+        <li>画像の拡大方式は<strong>「そのまま拡大（ドット絵のまま）」と「きれいに拡大（普通絵っぽい）」</strong>から選べます。</li>
+        <li>拡大倍率は<strong>２倍or３倍</strong>から選べます。ＭＶのマップ上に表示するなら２倍、2000のマップを移植する場合は３倍がおすすめです。</li>
+        <li>何気に顔グラにも対応してますが、キャラと違いドット絵ではないのでやや出来栄えが悪いです。詳しくはこちらの<a href="http://qiita.com/krmbn0576/items/88321063a1edfb31a979">比較</a>をどうぞ。</li>
+        <li>xBR法のスクリプトは<a href="http://ohhiru.info/upscale/">ドット絵をアップスケールするやつ</a>よりお借りしました。ありがとうございます！</li>
         <li>検索などから来た方は<a href="homepage.html">くらむぼんのホームページ</a>もぜひ寄ってください！MV用プラグインとか置いてます。</li>
     </ul>
     <ol>
-        <li>拡大方式および倍率を選んでチェックを入れる</li>
-        <li>「画像を選択」で2000キャラチップ（or顔グラ）を放り込む（画面に直接ドラッグ＆ドロップしてもＯＫ）</li>
-        <li>下にMVのキャラチップになって表示されるので右クリックして「名前を付けて画像を保存」</li>
+        <li><strong>拡大方式</strong>および<strong>倍率</strong>を選んでチェックを入れる</li>
+        <li><strong>「画像を選択」</strong>で2000キャラチップ（or顔グラ）を放り込む（画面に直接ドラッグ＆ドロップしてもＯＫ）</li>
+        <li>下にMVのキャラチップになって表示されるので右クリックして<strong>「名前を付けて画像を保存」</strong></li>
         <li>１～３を気が済むまで繰り返す（出力画像は一番下にどんどん追加されていきます）</li>
     </ol>
-    <button type="button" id="dummy">画像を選択</button>
-    <input type="file" id="image" style="display: none;" />
-    　　　拡大方式－
-    <label><input type="radio" name="upscale" id="dot" />：そのまま拡大</label>
-    <label><input type="radio" name="upscale" id="xbr" />：きれいに拡大</label>
-    　　　拡大倍率－
-    <label><input type="radio" name="scale" id="twice" />：２倍</label>
-    <label><input type="radio" name="scale" id="three" />：３倍</label>
+    <strong>
+        <button type="button" id="dummy">画像を選択</button>
+        <input type="file" id="image" style="display: none;">
+        　　　拡大方式－
+        <label><input type="radio" name="upscale" id="dot">：そのまま拡大</label>
+        <label><input type="radio" name="upscale" id="xbr">：きれいに拡大</label>
+        　　　拡大倍率－
+        <label><input type="radio" name="scale" id="twice">：２倍</label>
+        <label><input type="radio" name="scale" id="three">：３倍</label>
+    </strong>
     <div id="xBRscript" style="display: none;">
         //このタグ内のスクリプトは「ドット絵をアップスケールするやつ」よりお借りしました。ありがとうございます！
         (function () {
