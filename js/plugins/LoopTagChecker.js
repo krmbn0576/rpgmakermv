@@ -1,11 +1,21 @@
 //=============================================================================
 // LoopTagChecker.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2016/11/2 チェックするフォルダと表示情報を指定できるようにしました
 //=============================================================================
 
 /*:
  * @plugindesc bgmとbgsの音楽ファイルにループタグがついているかチェックします。
  * @author くらむぼん
+ *
+ * @param folder
+ * @desc チェックする音楽ファイルのフォルダ。(bgm:bgmフォルダのみ bgs:bgsフォルダのみ both:両方)
+ * @default both
+ *
+ * @param display
+ * @desc 表示する情報。(exist:ループタグが有るもののみ表示 none:ループタグが無いもののみ表示 both:両方表示)
+ * @default both
  *
  * @help
  * 本プラグインをONにしてテストプレイすると、bgmフォルダとbgsフォルダの
@@ -23,6 +33,11 @@
 (function() {
 	'use strict';
 	if (!Utils.isOptionValid('test') || !Utils.isNwjs()) return;
+	var parameters = PluginManager.parameters('LoopTagChecker');
+	var folder = parameters['folder'];
+	var display = parameters['display'];
+	var exist = display !== 'none';
+	var none = display !== 'exist';
 
 	var _WebAudio__readLoopComments = WebAudio.prototype._readLoopComments;
 	WebAudio.prototype._readLoopComments = function(array) {
@@ -40,16 +55,16 @@
 	var path = require('path').dirname(process.mainModule.filename) + '/audio/';
 	var fs = require('fs');
 
-	check('bgm');
-	check('bgs');
+	if (folder !== 'bgs') check('bgm');
+	if (folder !== 'bgm') check('bgs');
 
 	function check(folder) {
 		fs.readdirSync(path + folder).forEach(function(file) {
 			new WebAudio('audio/' + folder + '/' + file)._afterReadLoopComments = function() {
 				if (this._loopStart || this._loopLength) {
-					console.log(this._url + ': ループタグ有り！ LOOPSTART=' + this._loopStart + ' LOOPLENGTH=' + this._loopLength);
+					if (exist) console.log(this._url + ': ループタグ有り！ LOOPSTART=' + this._loopStart + ' LOOPLENGTH=' + this._loopLength);
 				} else {
-					console.error(this._url + ': ループタグ無し…');
+					if (none) console.error(this._url + ': ループタグ無し…');
 				}
 			};
 		});

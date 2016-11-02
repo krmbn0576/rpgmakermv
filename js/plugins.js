@@ -17,5 +17,5 @@ var $plugins =
 {"name":"HyperLink","status":true,"description":"ゲーム中に外部ページへのリンクを貼ります。","parameters":{"description":"Webサイトへのリンク"}},
 {"name":"DebugMonitor","status":true,"description":"スイッチ・変数の状態を画面上にリアルタイム表示します。","parameters":{"monitorX":"0","monitorY":"100","monitorW":"240"}},
 {"name":"AudioSource","status":true,"description":"音源と聞き手の位置関係に応じて自動的に音量・位相を調節します。","parameters":{"listener":"screen","decay":"85","pan":"10","cutoff":"1"}},
-{"name":"LoopTagChecker","status":false,"description":"bgmとbgsの音楽ファイルにループタグがついているかチェックします。","parameters":{}}
+{"name":"LoopTagChecker","status":false,"description":"bgmとbgsの音楽ファイルにループタグがついているかチェックします。","parameters":{"folder":"both","display":"both"}}
 ];
