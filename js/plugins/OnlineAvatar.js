@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // （これ以前の更新履歴は記録していません）
 // 2016/10/25 スイッチ・変数同期時、ツクール上とサーバー上でデータが食い違う不具合を修正しました
+// 2016/11/09 同じマップへの場所移動時、アバターが分身するのを修正しました
 //=============================================================================
 
 /*:
@@ -344,6 +345,9 @@ function Game_Avatar() {
 	//マップ切り替え時
 	var _Game_Player_performTransfer = Game_Player.prototype.performTransfer;
 	Game_Player.prototype.performTransfer = function() {
+		if ($gameMap.mapId() === $gamePlayer.newMapId()) {
+			for (var key in OnlineManager.avatarsInThisMap) OnlineManager.avatarsInThisMap[key].erase();
+		}
 		_Game_Player_performTransfer.apply(this, arguments);
 		OnlineManager.connectNewMap();
 	};
