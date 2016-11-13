@@ -5,6 +5,7 @@
 // （これ以前の更新履歴は記録していません）
 // 2016/10/25 スイッチ・変数同期時、ツクール上とサーバー上でデータが食い違う不具合を修正しました
 // 2016/11/09 同じマップへの場所移動時、アバターが分身するのを修正しました
+// 2016/11/14 イベント動的生成プラグイン(EventReSpawn.js)との競合対策
 //=============================================================================
 
 /*:
@@ -427,7 +428,7 @@ function Game_Avatar() {
 
 	Game_Avatar.prototype.initialize = function(eventData, onlineData) {
 		var mapId = $gameMap.mapId();
-		for (var eventId = 1; eventId < $gameMap._events.length && !!$gameMap._events[eventId]; eventId++);
+		var eventId = $gameMap.getEventIdSequence ? $gameMap.getEventIdSequence() : $gameMap._events.length;
 
 		['A', 'B', 'C', 'D'].forEach(function(switchId) {
 			var key = [mapId, eventId, switchId];
@@ -441,7 +442,7 @@ function Game_Avatar() {
 		this.setMoveSpeed(onlineData.speed);
 		this.setImage(onlineData.charaName, onlineData.charaIndex);
 		this.setOnlineData(onlineData);
-		$gameMap._events[eventId] = this;
+		$gameMap._events.push(this);
 
 		var scene = SceneManager._scene;
 		if (scene instanceof Scene_Map) {
