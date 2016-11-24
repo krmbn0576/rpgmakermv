@@ -134,20 +134,20 @@
 		_Game_Interpreter_pluginCommand.apply(this, arguments);
 		if (command.toLowerCase() === 'audiosource') {
 			switch (args[0].toLowerCase()) {
-			case 'listener':
-				if (!args[1] || args[1].toLowerCase() === 'reset') listenerEvent = null;
-				else listenerEvent = this.character(+args[1]);
-				break;
-			case 'bgm':
-				if (!args[1] || args[1].toLowerCase() === 'reset') bgmSource = null;
-				else bgmSource = this.character(+args[1]);
-				break;
-			case 'bgs':
-				if (!args[1] || args[1].toLowerCase() === 'reset') bgsSource = null;
-				else bgsSource = this.character(+args[1]);
-				break;
-			default:
-				break;
+				case 'listener':
+					if (!args[1] || args[1].toLowerCase() === 'reset') listenerEvent = null;
+					else listenerEvent = this.character(+args[1]);
+					break;
+				case 'bgm':
+					if (!args[1] || args[1].toLowerCase() === 'reset') bgmSource = null;
+					else bgmSource = this.character(+args[1]);
+					break;
+				case 'bgs':
+					if (!args[1] || args[1].toLowerCase() === 'reset') bgsSource = null;
+					else bgsSource = this.character(+args[1]);
+					break;
+				default:
+					break;
 			}
 		}
 	};

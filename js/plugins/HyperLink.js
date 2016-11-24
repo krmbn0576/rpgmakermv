@@ -55,14 +55,14 @@
 		_Game_Interpreter_pluginCommand.apply(this, arguments);
 		if (command.toLowerCase() === 'link') {
 			switch (args[0].toLowerCase()) {
-			case 'on':
-				Graphics.printLink(args[1], args[2]);
-				break;
-			case 'off':
-				Graphics.clearLink();
-				break;
-			default:
-				break;
+				case 'on':
+					Graphics.printLink(args[1], args[2]);
+					break;
+				case 'off':
+					Graphics.clearLink();
+					break;
+				default:
+					break;
 			}
 		}
 	};

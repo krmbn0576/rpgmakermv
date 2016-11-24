@@ -6,6 +6,8 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.5.0 2016/10/20 本体バージョン1.3.2でエラーが発生していたのを修正
+// 1.4.0 2016/10/06 パラメータに環境変数を使えるように修正
 // 1.3.0 2016/06/24 WEBP形式のショートカットキーを追加
 // 1.2.3 2016/06/23 著名に画像とテキストを両方使えるよう修正
 // 1.2.2 2016/05/13 プラグインコマンドから出力したときに拡張子の表示がおかしくなる問題を修正
@@ -104,7 +106,10 @@
  *
  * プラグインコマンド以外は、テストプレー時のみ有効になります。
  *
- * キャプチャの際に著名を自動で埋め込むことができます。
+ * キャプチャしたファイルの保存場所は絶対パス、相対パスいずれも指定できるほか、
+ * OSの環境変数（%USERPROFILE%など）にも対応しています。
+ *
+ * また、キャプチャの際に著名を自動で埋め込むことができます。
  * 著名は文字列で指定できるほか、任意の画像も指定可能です。
  * （両方指定すると画像が優先されます）
  *
@@ -216,7 +221,10 @@
  *
  * プラグインコマンド以外は、テストプレー時のみ有効になります。
  *
- * キャプチャの際に著名を自動で埋め込むことができます。
+ * キャプチャしたファイルの保存場所は絶対パス、相対パスいずれも指定できるほか、
+ * OSの環境変数（%USERPROFILE%など）にも対応しています。
+ *
+ * また、キャプチャの際に著名を自動で埋め込むことができます。
  * 著名は文字列で指定できるほか、任意の画像も指定可能です。
  * （両方指定すると画像が優先されます）
  *
@@ -296,7 +304,7 @@
         if (!Array.isArray(paramNames)) paramNames = [paramNames];
         for (var i = 0; i < paramNames.length; i++) {
             var name = PluginManager.parameters(pluginName)[paramNames[i]];
-            if (name) return name;
+            if (name) return Utils.isNwjs() ? convertEnvironmentVariable(name) : name;
         }
         return null;
     };
@@ -308,6 +316,14 @@
     var getArgString = function(arg, upperFlg) {
         arg = convertEscapeCharacters(arg);
         return upperFlg ? arg.toUpperCase() : arg;
+    };
+
+    var convertEnvironmentVariable = function(text) {
+        if (text == null) text = '';
+        text = text.replace(/%(\w+)%/gi, function() {
+            return process.env[arguments[1]] || '';
+        }.bind(this));
+        return text;
     };
 
     var convertEscapeCharacters = function(text) {
@@ -332,7 +348,6 @@
     var paramInterval           = getParamNumber(['Interval', '実行間隔']);
     var paramSeName             = getParamString(['SeName', '効果音']);
     var paramTimeStamp          = getParamBoolean(['TimeStamp', 'タイムスタンプ']);
-    var localCaptureExecute     = false;
 
     //=============================================================================
     // Game_Interpreter
@@ -442,26 +457,6 @@
     };
 
     //=============================================================================
-    // WindowLayer
-    //  キャプチャ実行時、マスク処理のY座標を修正します。
-    //=============================================================================
-    var _WindowLayer__webglMaskRect      = WindowLayer.prototype._webglMaskRect;
-    WindowLayer.prototype._webglMaskRect = function(renderSession, x, y, w, h) {
-        if (localCaptureExecute) arguments[2] = Graphics.boxHeight - (y + h);
-        _WindowLayer__webglMaskRect.apply(this, arguments);
-    };
-
-    //=============================================================================
-    // Sprite
-    //  キャプチャ実行時、_offset.yの値を逆方向に補正します。
-    //=============================================================================
-    var _Sprite__renderWebGL      = Sprite.prototype._renderWebGL;
-    Sprite.prototype._renderWebGL = function(renderSession) {
-        if (localCaptureExecute) this.worldTransform.ty -= this._offset.y * 2;
-        _Sprite__renderWebGL.apply(this, arguments);
-    };
-
-    //=============================================================================
     // Bitmap
     //  対象のビットマップを保存します。現状、ローカル環境下でのみ動作します。
     //=============================================================================
@@ -521,9 +516,7 @@
             se.name = paramSeName;
             AudioManager.playSe(se);
         }
-        localCaptureExecute = true;
         this._captureBitmap = this.snap();
-        localCaptureExecute = false;
     };
 
     SceneManager.getCapture = function() {

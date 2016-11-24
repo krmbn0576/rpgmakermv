@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_managers.js v1.3.3
+// rpg_managers.js v1.3.4
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1738,7 +1738,6 @@ SceneManager.onKeyDown = function(event) {
         switch (event.keyCode) {
         case 116:   // F5
             if (Utils.isNwjs()) {
-                window.alert($gameSystem && $gameSystem.isJapanese() ? "リロードを実行します。ゲームパッドを使用している場合、パッドの接続が途切れることがあります" : "Reloading the game with a gamepad connected will cause a disconnect."); // TODO: Get properly translated
                 location.reload();
             }
             break;
@@ -2060,17 +2059,17 @@ BattleManager.update = function() {
 
 BattleManager.updateEvent = function() {
     switch (this._phase) {
-    case 'start':
-    case 'turn':
-    case 'turnEnd':
-        if (this.isActionForced()) {
-            this.processForcedAction();
-            return true;
-        } else {
-            return this.updateEventMain();
-        }
+        case 'start':
+        case 'turn':
+        case 'turnEnd':
+            if (this.isActionForced()) {
+                this.processForcedAction();
+                return true;
+            } else {
+                return this.updateEventMain();
+            }
     }
-    return this.checkAbort();
+    return this.checkAbort2();
 };
 
 BattleManager.updateEventMain = function() {
@@ -2417,6 +2416,15 @@ BattleManager.checkAbort = function() {
     return false;
 };
 
+BattleManager.checkAbort2 = function() {
+    if ($gameParty.isEmpty() || this.isAborting()) {
+        SoundManager.playEscape();
+        this._escaped = true;
+        this.processAbort();
+    }
+    return false;
+};
+
 BattleManager.processVictory = function() {
     $gameParty.removeBattleStates();
     $gameParty.performVictory();
@@ -2479,7 +2487,7 @@ BattleManager.updateBattleEnd = function() {
     if (this.isBattleTest()) {
         AudioManager.stopBgm();
         SceneManager.exit();
-    } else if ($gameParty.isAllDead()) {
+    } else if (!this._escaped && $gameParty.isAllDead()) {
         if (this._canLose) {
             $gameParty.reviveBattleMembers();
             SceneManager.pop();

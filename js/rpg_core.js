@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_core.js v1.3.3
+// rpg_core.js v1.3.4
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Utils.RPGMAKER_NAME = 'MV';
  * @type String
  * @final
  */
-Utils.RPGMAKER_VERSION = "1.3.3";
+Utils.RPGMAKER_VERSION = "1.3.4";
 
 /**
  * Checks whether the option is in the query string.
@@ -660,6 +660,7 @@ Bitmap.snap = function(stage) {
     } else {
         //TODO: Ivan: what if stage is not present?
     }
+    renderTexture.destroy({ destroyBase: true });
     bitmap._setDirty();
     return bitmap;
 };
@@ -5546,11 +5547,6 @@ TilingSprite.prototype.setFrame = function(x, y, width, height) {
 TilingSprite.prototype.updateTransform = function() {
     this.tilePosition.x = Math.round(-this.origin.x);
     this.tilePosition.y = Math.round(-this.origin.y);
-    //TODO: ivan: i really dont know whats these about
-    // if (!this.tilingTexture) {
-    //     this.originalTexture = null;
-    //     this.generateTilingTexture(true);
-    // }
     this.updateTransformTS();
 };
 
@@ -6617,8 +6613,8 @@ WindowLayer.prototype.renderWebGL = function(renderer) {
     var shift = new PIXI.Point();
     var rt = renderer._activeRenderTarget;
     var projectionMatrix = rt.projectionMatrix;
-    shift.x = (projectionMatrix.tx + 1) / 2 * rt.size.width;
-    shift.y = (projectionMatrix.ty + 1) / 2 * rt.size.height;
+    shift.x = Math.round((projectionMatrix.tx + 1) / 2 * rt.sourceFrame.width);
+    shift.y = Math.round((projectionMatrix.ty + 1) / 2 * rt.sourceFrame.height);
 
     for (var i = 0; i < this.children.length; i++) {
         var child = this.children[i];

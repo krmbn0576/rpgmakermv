@@ -377,15 +377,15 @@ function Game_Avatar() {
 		_Game_Interpreter_pluginCommand.apply(this, arguments);
 		if (command.toLowerCase() === 'online') {
 			switch (args[1].toLowerCase()) {
-			case 'from':
-				var online = this.character(0).online;
-				$gameVariables.setValue(+args[0], online && online[args[2]]);
-				break;
-			case 'to':
-				OnlineManager.sendCustomInfo(args[2], $gameVariables.value(+args[0]));
-				break;
-			default:
-				break;
+				case 'from':
+					var online = this.character(0).online;
+					$gameVariables.setValue(+args[0], online && online[args[2]]);
+					break;
+				case 'to':
+					OnlineManager.sendCustomInfo(args[2], $gameVariables.value(+args[0]));
+					break;
+				default:
+					break;
 			}
 		}
 	};
