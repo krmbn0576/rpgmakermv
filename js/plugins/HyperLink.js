@@ -1,6 +1,8 @@
 //=============================================================================
 // HyperLink.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2016/12/04 リンクの背景を丸く白で塗りました
 //=============================================================================
 
 /*:
@@ -36,7 +38,7 @@
 
 	Graphics.printLink = function(url, title) {
 		if (this._errorPrinter) {
-			var link = '<a href="' + url + '" target="_blank" id="HyperLink">' + title + '</a>';
+			var link = '<a href="' + url + '" target="_blank" id="HyperLink" style="background-color: #eee;border-radius: 1em;">' + title + '</a>';
 			this._errorPrinter.innerHTML = this._makeErrorHtml(description, link);
 			var a = document.getElementById('HyperLink');
 			a.addEventListener('mousedown', stopPropagation);
