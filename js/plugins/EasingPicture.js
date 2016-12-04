@@ -37,7 +37,7 @@
  * その他の「動き方」が知りたい方は以下のサイトを参照してください。
  * http://easings.net/ja
  * このサイトには本プラグインで使用できるすべての「動き方」の
- * 名前と図が載っています。（横軸が時間で縦軸が変化量）
+ * 名前と図が載っています。（図の見方：横軸が時間、縦軸が変化量）
  * 
  * 
  * 応用編：
@@ -80,7 +80,7 @@
 		} else {
 			return jQueryEasing.linear(this._time, easing.b, easing.c, this._duration);
 		}
-	}
+	};
 
 	var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 	Game_Interpreter.prototype.pluginCommand = function(command, args) {
