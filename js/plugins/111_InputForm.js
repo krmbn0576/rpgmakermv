@@ -25,6 +25,12 @@
  * （ハマリポイント２）次のイベントコマンドの読み込みまでは
  * 少し間があるため結果の変数を他の並列処理で上書きしないよう注意。
  * 
+ * 
+ * 機能追加：
+ * Inputform （中略）btn_x=100;btn_y=100;
+ * という書き方で、「決定」ボタンの位置を細かく調整できるようにしました。
+ * 値はテキストボックスからの相対位置で、デフォルトはbtn_x=0;btn_y=50;です。
+ * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
 */
@@ -82,13 +88,15 @@
     Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         if (command === 'InputForm'){
-            var _ary = argHash(args[0] , ["x" , "y" , "v" , "max" , "if_s"]);
+            var _ary = argHash(args[0] , ["x" , "y" , "v" , "max" , "if_s", "btn_x", "btn_y"]);
             var target_x = +_ary[0];
             var target_y = +_ary[1];
             var variables_id = +_ary[2];
             var max_count = _ary[3] || null;
             var if_switch_id = Number(_ary[4]) || null;
             var result_switch_id = Number(_ary[5]) || null;
+            var button_x = +_ary[6] || 0;
+            var button_y = +_ary[7] || 50;
 
             var interpreter = this;
             var gui = {
@@ -134,6 +142,7 @@
                     window.removeEventListener("resize", resizeEvent, false);
                     interpreter.setWaitMode('');
                     Input.form_mode = false;
+                    clearInterval(_event);
                     // SceneManager._scene.start();
                 } ,
                 screenAdjust : function(){ // canvasの左上を基準にした位置に合わせる
@@ -143,7 +152,7 @@
                     screen_x = rect.left;
                     screen_y = rect.top;
                     this.input.postionAdjust([screen_x,screen_y] , [target_x,target_y]);
-                    this.submit.postionAdjust([screen_x,screen_y] , [target_x,target_y + 50]);
+                    this.submit.postionAdjust([screen_x,screen_y] , [target_x + button_x,target_y + button_y]);
                 }
             }
             //
@@ -162,12 +171,13 @@
                 return false;
             });
             // キャンセルするイベント
-            var _event = setInterval(function(){
-                if($gameSwitches.value(if_switch_id)){
-                    clearInterval(_event);
-                    gui.cancel();
-                }
-            }, 1);
+            if (if_switch_id) {
+                var _event = setInterval(function(){
+                    if($gameSwitches.value(if_switch_id)){
+                        gui.cancel();
+                    }
+                }, 1);
+            }
 
             // webではウィンドー大きさ変わる度に%求め直すイベントもいる
             //if(! gui.is_pc){
