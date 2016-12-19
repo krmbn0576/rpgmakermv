@@ -95,7 +95,7 @@
             var max_count = _ary[3] || null;
             var if_switch_id = Number(_ary[4]) || null;
             var button_x = +_ary[5] || 0;
-            var button_y = +_ary[6] || 50;
+            var button_y = isNaN(_ary[6]) ? 50 : +_ary[6];
 
             var interpreter = this;
             var gui = {
