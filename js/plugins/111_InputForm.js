@@ -94,9 +94,8 @@
             var variables_id = +_ary[2];
             var max_count = _ary[3] || null;
             var if_switch_id = Number(_ary[4]) || null;
-            var result_switch_id = Number(_ary[5]) || null;
-            var button_x = +_ary[6] || 0;
-            var button_y = +_ary[7] || 50;
+            var button_x = +_ary[5] || 0;
+            var button_y = +_ary[6] || 50;
 
             var interpreter = this;
             var gui = {
@@ -174,6 +173,7 @@
             if (if_switch_id) {
                 var _event = setInterval(function(){
                     if($gameSwitches.value(if_switch_id)){
+                        // clearInterval(_event);
                         gui.cancel();
                     }
                 }, 1);
