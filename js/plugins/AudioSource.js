@@ -5,6 +5,7 @@
 // 2016/10/18 BGMとBGSの音源化を、一度指定すれば自動調節としました
 // 2016/10/21 音量・位相調節の距離測定単位をマス単位からドット単位に変更しました
 // 2016/12/04 セーブ・ロードに対応、BGS並行演奏プラグイン(ParallelBgs.js)との連携
+// 2017/01/06 戦闘アニメの音源化に対応、戦闘を挟んでも正常動作するようにした
 //=============================================================================
 
 /*:
@@ -36,6 +37,7 @@
  * 
  * また、プラグインコマンドによりBGMやBGSを特定の位置から鳴らすことができます。
  * トリアコンタンさんのBGS並行演奏プラグインとも連携可能にしてみました。
+ * さらに「戦闘アニメの表示」の効果音も対象の位置から鳴らすことができます。
  * 詳しくは下の方の「プラグインコマンド」を見てください。
  * 
  * なお基準となる音量は効果音(,BGM,BGS)の演奏を指定した時の音量です。
@@ -83,6 +85,13 @@
  * BGM/BGSの音源化を解除し、通常通りの演奏に戻します。
  * 
  * 
+ * audiosource animation on
+ * audiosource animation off
+ * onにすると、「戦闘アニメの表示」で効果音が鳴った時にも
+ * 表示対象のキャラの位置から音が鳴っているように調節します。
+ * 初期値はoff。
+ * 
+ * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
  */
@@ -98,16 +107,35 @@
 	//効果音の音量調節（マップイベントのルート設定から鳴らした時のみ）
 	var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
 	Game_Character.prototype.processMoveCommand = function(command) {
-		if (command.code === Game_Character.ROUTE_PLAY_SE) {
-			var se = command.parameters[0];
-			var lastVolume = se.volume;
-			var lastPan = se.pan;
-			adjust(se, this);
-			if (se.volume >= cutoff) AudioManager.playSe(se);
-			se.volume = lastVolume;
-			se.pan = lastPan;
-		}
+		if (command.code === Game_Character.ROUTE_PLAY_SE) playAdjustSe(command.parameters[0], this);
 		else _Game_Character_processMoveCommand.apply(this, arguments);
+	};
+
+	//戦闘アニメ中の効果音を音量調節
+	Sprite_Animation.prototype.processTimingData = function(timing) {
+		var duration = timing.flashDuration * this._rate;
+		switch (timing.flashScope) {
+			case 1:
+			this.startFlash(timing.flashColor, duration);
+			break;
+			case 2:
+			this.startScreenFlash(timing.flashColor, duration);
+			break;
+			case 3:
+			this.startHiding(duration);
+			break;
+		}
+		if (!this._duplicated && timing.se) {
+			playAdjustSe(timing.se, $gameSystem._animationSource && this._target && this._target._character);
+		}
+	};
+
+	//戦闘終了直後、BGMとBGSの音量が初期値に戻っているので再度設定する
+	//fadeInがcancelされてしまいそうだが、実際はfadeInの処理の方が遅延するのでうまくいく
+	var _BattleManager_replayBgmAndBgs = BattleManager.replayBgmAndBgs;
+	BattleManager.replayBgmAndBgs = function() {
+		_BattleManager_replayBgmAndBgs.apply(this, arguments);
+		AudioManager.updateAudioSource();
 	};
 
 	//BGM、BGSの音量調節（毎フレーム）
@@ -147,6 +175,9 @@
 					}
 					else $gameSystem._bgsSource = eventId;
 					break;
+				case 'animation':
+					$gameSystem._animationSource = args[1].toLowerCase() === 'on';
+					break;
 				default:
 					break;
 			}
@@ -160,10 +191,25 @@
 			var lastPan = audio.pan;
 			adjust(audio, source);
 			if (audio.volume < cutoff) audio.volume = 0;
+			var buffer = AudioManager[isBgm ? '_bgmBuffer' : '_bgsBuffer'];
+			if (buffer && buffer._gainNode) buffer._gainNode.gain.cancelScheduledValues(0);
 			AudioManager['update' + (isBgm ? 'Bgm' : 'Bgs') + 'Parameters'](audio);
 			audio.volume = lastVolume;
 			audio.pan = lastPan;
 		}
+	}
+
+	//SEの音量と位相を調節して再生する
+	function playAdjustSe(se, source) {
+		if (source) {
+			var lastVolume = se.volume;
+			var lastPan = se.pan;
+			adjust(se, source);
+			if (se.volume >= cutoff) AudioManager.playSe(se);
+			se.volume = lastVolume;
+			se.pan = lastPan;
+		}
+		else AudioManager.playSe(se);
 	}
 
 	//実際に音量調節を担当する関数。第一引数にオーディオデータ、第二引数に音源キャラクターを指定する

@@ -6,6 +6,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // Version
+// 1.0.2 2017/01/05 BGSの演奏状態によっては、セーブ＆ロードした際に一部のBGSが演奏されなくなる現象の修正(byくらむぼん氏)
 // 1.0.1 2016/11/16 BGSをプレーしていない状態でセーブ＆ロードするとエラーになる現象の修正
 // 1.0.0 2016/11/12 初版
 // ----------------------------------------------------------------------------
@@ -290,9 +291,30 @@
         this.stopAllBgs();
         var prevIndex      = this._bgsLineIndex;
         this._bgsLineIndex = 1;
-        bgsArray.forEach(function(bgs) {
-            _AudioManager_playBgs.call(this, bgs, null);
-            this._bgsLineIndex++;
+        bgsArray.forEach(function(bgs, index) {
+            this._bgsLineIndex = index;
+            this.playBgs(bgs, null);
+        }, this);
+        this._bgsLineIndex = prevIndex;
+    };
+
+    var _AudioManager_replayBgs = AudioManager.replayBgs;
+    AudioManager.replayBgs      = function(bgs) {
+        if (!bgs) return;
+        if (Array.isArray(bgs)) {
+            this.replayAllBgs(bgs);
+        } else {
+            _AudioManager_replayBgs.apply(this, arguments);
+        }
+    };
+
+    AudioManager.replayAllBgs = function(bgsArray) {
+        this.stopAllBgs();
+        var prevIndex      = this._bgsLineIndex;
+        this._bgsLineIndex = 1;
+        bgsArray.forEach(function(bgs, index) {
+            this._bgsLineIndex = index;
+            this.replayBgs(bgs);
         }, this);
         this._bgsLineIndex = prevIndex;
     };
@@ -301,7 +323,7 @@
     AudioManager.saveBgs      = function() {
         var bgsArray = [];
         this.iterateAllBgs(function() {
-            bgsArray.push(_AudioManager_saveBgs.apply(this, arguments));
+            bgsArray[this._bgsLineIndex] = _AudioManager_saveBgs.apply(this, arguments);
         }.bind(this));
         return bgsArray.length > 1 ? bgsArray : bgsArray[0];
     };
@@ -393,7 +415,7 @@
     //  演奏が要求済みかどうかを返します。
     //=============================================================================
     WebAudio.prototype.isExist = function() {
-        return !!this._autoPlay;
+        return this._autoPlay;
     };
 
     //=============================================================================
