@@ -5,7 +5,8 @@
 // 2016/10/18 BGMとBGSの音源化を、一度指定すれば自動調節としました
 // 2016/10/21 音量・位相調節の距離測定単位をマス単位からドット単位に変更しました
 // 2016/12/04 セーブ・ロードに対応、BGS並行演奏プラグイン(ParallelBgs.js)との連携
-// 2017/01/06 アニメーションの音源化に対応、戦闘を挟んでも正常動作するようにした
+// 2017/01/07 アニメーションの音源化に対応、戦闘を挟んでも正常動作するようにした
+// 2017/01/09 ルート設定のSE音源化もoffに設定できるようにした
 //=============================================================================
 
 /*:
@@ -34,10 +35,10 @@
  * 具体的には、「音源」と「聞き手」が離れているほど音量が小さくなり、
  * 「聞き手」より「音源」が右にあるほど位相が増加（＝右から聞こえる）します。
  * ※イベントコマンドの「SEの演奏」では自動調節しません。うまく使い分けましょう。
+ * また、「アニメーションの表示」の効果音も対象の位置から聞こえるようになります。
  * 
- * また、プラグインコマンドによりBGMやBGSを特定の位置から鳴らすことができます。
+ * さらに、プラグインコマンドによりBGMやBGSを特定の位置から鳴らすことができます。
  * トリアコンタンさんのBGS並行演奏プラグインとも連携可能にしてみました。
- * さらに「アニメーションの表示」の効果音も対象の位置から鳴らすことができます。
  * 詳しくは下の方の「プラグインコマンド」を見てください。
  * 
  * なお基準となる音量は効果音(,BGM,BGS)の演奏を指定した時の音量です。
@@ -85,11 +86,12 @@
  * BGM/BGSの音源化を解除し、通常通りの演奏に戻します。
  * 
  * 
- * audiosource animation on
- * audiosource animation off
- * onにすると、「アニメーションの表示」で効果音が鳴った時にも
- * 表示対象のキャラの位置から音が鳴っているように調節します。
- * 初期値はoff。
+ * audiosource se on
+ * audiosource se off
+ * 「ルート設定」や「アニメーションの表示」では自動的に効果音が
+ * 対象キャラの位置から音が鳴っているように調節されますが、
+ * 調節してほしくない時はこのプラグインコマンドでoffにしましょう。
+ * 初期値はonです。
  * 
  * 
  * ライセンス：
@@ -126,7 +128,7 @@
 			break;
 		}
 		if (!this._duplicated && timing.se) {
-			playAdjustSe(timing.se, $gameSystem._animationSource && this._target && this._target._character);
+			playAdjustSe(timing.se, this._target && this._target._character);
 		}
 	};
 
@@ -175,8 +177,8 @@
 					}
 					else $gameSystem._bgsSource = eventId;
 					break;
-				case 'animation':
-					$gameSystem._animationSource = args[1].toLowerCase() === 'on';
+				case 'se':
+					$gameSystem._seSourceOff = args[1].toLowerCase() === 'off';
 					break;
 				default:
 					break;
@@ -201,7 +203,7 @@
 
 	//SEの音量と位相を調節して再生する
 	function playAdjustSe(se, source) {
-		if (source) {
+		if (source && !$gameSystem._seSourceOff) {
 			var lastVolume = se.volume;
 			var lastPan = se.pan;
 			adjust(se, source);
