@@ -20,5 +20,6 @@ var $plugins =
 {"name":"AudioSource","status":true,"description":"音源と聞き手の位置関係に応じて自動的に音量・位相を調節します。","parameters":{"listener":"screen","decay":"85","pan":"10","cutoff":"1"}},
 {"name":"LoopTagChecker","status":false,"description":"bgmとbgsの音楽ファイルにループタグがついているかチェックします。","parameters":{"folder":"both","display":"both"}},
 {"name":"ParallelBgs","status":true,"description":"BGS並行演奏プラグイン","parameters":{}},
-{"name":"EasingPicture","status":true,"description":"ピクチャーの移動パターンを増やします。","parameters":{}}
+{"name":"EasingPicture","status":true,"description":"ピクチャーの移動パターンを増やします。","parameters":{}},
+{"name":"MultipleCameras","status":true,"description":"画面に複数のカメラ（視点）を配置します。","parameters":{}}
 ];
