@@ -42,12 +42,12 @@
  * なおカメラ番号に「-1」を指定しても、メイン画面のターゲットは変えられません。
  * 
  * camera target カメラ番号 xy 左上x座標 左上y座標
- * 指定したカメラ番号のカメラの映し出す対象を固定座標で指定します。
- * カメラをスクロールさせる演出がしたい時は、自分で並列イベントを用意して
- * 座標をずらしながらこのプラグインコマンドを連打してください。
+ * 指定したカメラ番号のカメラが映し出す対象を固定座標で指定します。
  * 
  * camera target カメラ番号 event イベントID
  * 指定したカメラ番号のカメラが追跡して映し出す対象イベントを指定します。
+ * カメラをスクロールさせる演出がしたい時は、透明なイベントを対象にして
+ * それをスクロールしたい方向に歩かせるといい感じです。
  * イベントIDに「0」を指定した場合は対象が「このイベント」に、
  * 「-1」を指定した場合は対象が「プレイヤー」になります。
  * 
@@ -117,10 +117,15 @@
 			frame.drawRect(0, 0, texture.width + lineWidth, texture.height + lineWidth);
 			sprite.addChild(frame);
 		}
-		var length = this._cameraContainer.children.length;
-		this._cameraContainer.addChildAt(sprite, Math.min(index, length));
 		this._cameras = this._cameras || [];
 		this._cameras[index] = {texture: texture, sprite: sprite};
+		for (var i = index - 1; i >= 0; i--) {
+			if (this._cameras[i]) {
+				i = this._cameraContainer.getChildIndex(this._cameras[i].sprite);
+				break;
+			}
+		}
+		this._cameraContainer.addChildAt(sprite, i + 1);
 	};
 
 	Spriteset_Map.prototype.createAllCameras = function() {
