@@ -1,6 +1,8 @@
 //=============================================================================
 // MultipleCameras.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2017/02/01 カメラのバックに遠景を設定可能に。マップ遠景がスクロールしないバグを修正
 //=============================================================================
 
 /*:
@@ -70,6 +72,16 @@
  * 裏で無駄な画面を映しているとゲームが重くなるので
  * メイン画面が必要ない時は積極的に消していきましょう。
  * 
+ * 
+ * ・カメラのバックに遠景
+ * camera parallax back
+ * このプラグインコマンドの後に「遠景の変更」コマンドを使うと
+ * マップの遠景ではなく、すべてのカメラの後ろに遠景を表示できます。
+ * つまりメイン画面を消去していてカメラ配置に隙間がある時だけ見えます。
+ * 
+ * camera parallax map
+ * 遠景の設定先をマップに戻します。
+ * 
  * ・リセット
  * camera reset
  * すべてのカメラ配置を解除し、メイン画面一つの状態に戻します。
@@ -89,10 +101,21 @@
 		_Graphics_render.apply(this, arguments);
 	};
 
-	var _Spriteset_Map_createWeather = Spriteset_Map.prototype.createWeather;
-	Spriteset_Map.prototype.createWeather = function() {
+	var _Bitmap_snap = Bitmap.snap;
+	Bitmap.snap = function(stage) {
+		if (stage instanceof Scene_Map) {
+			stage._spriteset.renderCameras();
+		}
+		return _Bitmap_snap.apply(this, arguments);
+	};
+
+	var _Spriteset_Map_createBaseSprite = Spriteset_Map.prototype.createBaseSprite;
+	Spriteset_Map.prototype.createBaseSprite = function() {
+		this._cameraParallax = new TilingSprite();
+		this._cameraParallax.move(0, 0, Graphics.width, Graphics.height);
+		this.addChild(this._cameraParallax);
+		_Spriteset_Map_createBaseSprite.apply(this, arguments);
 		this.createCameraContainer();
-		_Spriteset_Map_createWeather.apply(this, arguments);
 	};
 
 	Spriteset_Map.prototype.createCameraContainer = function() {
@@ -148,15 +171,14 @@
 
 	Spriteset_Map.prototype.renderCameras = function() {
 		if (this._cameras) {
-			var dx = $gameMap.displayX();
-			var dy = $gameMap.displayY();
+			var displayPos = $gameMap.saveDisplayPos();
 			this._baseSprite.visible = true;
 			this._cameras.forEach(function(camera, index) {
-				$gameMap.changeDisplayPos(index);
+				$gameMap.scrollDisplayPos(index);
 				this.changePositions();
 				Graphics._renderer.render(this._baseSprite, camera.texture);
 			}, this);
-			$gameMap.setDisplayPos(dx, dy);
+			$gameMap.restoreDisplayPos(displayPos);
 			this.changePositions();
 		}
 		this._baseSprite.visible = !$gameMap._mainCameraDisabled;
@@ -170,6 +192,33 @@
 		});
 		this.updateShadow();
 		this._destinationSprite.updatePosition();
+	};
+
+	Spriteset_Map.prototype.updateCameraParallax = function() {
+		var parallax = $gameMap._cameraParallax;
+		if (parallax) {
+			if (this._cameraParallaxName !== parallax.name) {
+				this._cameraParallaxName = parallax.name;
+				if (this._cameraParallax.bitmap && !Graphics.isWebGL()) {
+					var index = this.getChildIndex(this._cameraParallax);
+					this.removeChildAt(index);
+					this._cameraParallax = new TilingSprite();
+					this._cameraParallax.move(0, 0, Graphics.width, Graphics.height);
+					this.addChildAt(this._cameraParallax, index);
+				}
+				this._cameraParallax.bitmap = ImageManager.loadParallax(parallax.name);
+			}
+			if (this._cameraParallax.bitmap) {
+				this._cameraParallax.origin.x = parallax.x;
+				this._cameraParallax.origin.y = parallax.y;
+			}
+		}
+	};
+
+	var _Spriteset_Map_update = Spriteset_Map.prototype.update;
+	Spriteset_Map.prototype.update = function() {
+		_Spriteset_Map_update.apply(this, arguments);
+		this.updateCameraParallax();
 	};
 
 	Game_Map.prototype.addCamera = function(index, x, y, width, height) {
@@ -234,25 +283,61 @@
 		}
 	};
 
-	Game_Map.prototype.changeDisplayPos = function(index) {
+	Game_Map.prototype.scrollDisplayPos = function(index) {
 		var camera = this._cameras[index];
-		var x = camera.targetX;
-		var y = camera.targetY;
 		if (this.isLoopHorizontal()) {
-			this._displayX = x.mod(this.width());
-			this._parallaxX = x;
+			var x = camera.targetX - this._displayX;
+			this._displayX += x.mod(this.width());
+			this._parallaxX += x;
 		} else {
 			var endX = this.width() - camera.width;
-			this._displayX = endX < 0 ? endX / 2 : x.clamp(0, endX);
-			this._parallaxX = this._displayX;
+			if (endX > 0) {
+				var lastX = this._displayX;
+				this._displayX = camera.targetX.clamp(0, endX);
+				this._parallaxX += this._displayX - lastX;
+			}
 		}
 		if (this.isLoopVertical()) {
-			this._displayY = y.mod(this.height());
-			this._parallaxY = y;
+			var y = camera.targetY - this._displayY;
+			this._displayY += y.mod(this.height());
+			this._parallaxY += y;
 		} else {
 			var endY = this.height() - camera.height;
-			this._displayY = endY < 0 ? endY / 2 : y.clamp(0, endY);
-			this._parallaxY = this._displayY;
+			if (endY > 0) {
+				var lastY = this._displayY;
+				this._displayY = camera.targetY.clamp(0, endY);
+				this._parallaxY += this._displayY - lastY;
+			}
+		}
+	};
+
+	Game_Map.prototype.saveDisplayPos = function() {
+		return {dx: this._displayX, dy: this._displayY, px: this._parallaxX, py: this._parallaxY};
+	};
+
+	Game_Map.prototype.restoreDisplayPos = function(data) {
+		this._displayX = data.dx;
+		this._displayY = data.dy;
+		this._parallaxX = data.px;
+		this._parallaxY = data.py;
+	};
+
+	var _Game_Map_changeParallax = Game_Map.prototype.changeParallax;
+	Game_Map.prototype.changeParallax = function(name, loopX, loopY, sx, sy) {
+		if (this._cameraParallax && !this._cameraParallax.disabled) {
+			var s = ImageManager.isZeroParallax(name) ? 2 : 4;
+			this._cameraParallax = {name: name, x: 0, y: 0, sx: loopX ? sx / s : 0, sy: loopY ? sy / s : 0};
+		} else {
+			_Game_Map_changeParallax.apply(this, arguments);
+		}
+	};
+
+	var _Game_Map_updateParallax = Game_Map.prototype.updateParallax;
+	Game_Map.prototype.updateParallax = function() {
+		_Game_Map_updateParallax.apply(this, arguments);
+		if (this._cameraParallax) {
+			this._cameraParallax.x += this._cameraParallax.sx;
+			this._cameraParallax.y += this._cameraParallax.sy;
 		}
 	};
 
@@ -286,6 +371,9 @@
 					break;
 				case 'frame':
 					this.frameCamera.apply(this, args);
+					break;
+				case 'parallax':
+					this.parallaxCamera.apply(this, args);
 					break;
 				case 'reset':
 					this.resetCamera();
@@ -363,6 +451,11 @@
 				break;
 		}
 		$gameMap._cameraFrame = {lineWidth: lineWidth, lineColor: lineColor};
+	};
+
+	Game_Interpreter.prototype.parallaxCamera = function(mode) {
+		$gameMap._cameraParallax = $gameMap._cameraParallax || {};
+		$gameMap._cameraParallax.disabled = mode !== 'back';
 	};
 
 	Game_Interpreter.prototype.resetCamera = function() {
