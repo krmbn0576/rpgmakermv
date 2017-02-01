@@ -3,6 +3,7 @@
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
 // 2016/12/04 リンクの背景を丸く白で塗りました
+// 2017/02/01 ローカル実行時、標準ブラウザからリンクを開くようにしました
 //=============================================================================
 
 /*:
@@ -43,6 +44,14 @@
 			var a = document.getElementById('HyperLink');
 			a.addEventListener('mousedown', stopPropagation);
 			a.addEventListener('touchstart', stopPropagation);
+			a.addEventListener('click', function(event) {
+				if (Utils.isNwjs()) {
+					var exec = require('child_process').exec;
+					var command = process.platform === 'win32' ? 'rundll32.exe url.dll,FileProtocolHandler' : 'open';
+					exec(command + ' "' + url + '"');
+					event.preventDefault();
+				}
+			});
 		}
 	};
 
