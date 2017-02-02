@@ -93,6 +93,7 @@
 
 (function() {
 	'use strict';
+	//画面を描画する直前に、各カメラに画像を描画する
 	var _Graphics_render = Graphics.render;
 	Graphics.render = function(stage) {
 		if (this._skipCount === 0 && stage instanceof Scene_Map) {
@@ -101,6 +102,7 @@
 		_Graphics_render.apply(this, arguments);
 	};
 
+	//スナップショットの直前も同様
 	var _Bitmap_snap = Bitmap.snap;
 	Bitmap.snap = function(stage) {
 		if (stage instanceof Scene_Map) {
@@ -109,6 +111,7 @@
 		return _Bitmap_snap.apply(this, arguments);
 	};
 
+	//カメラの後ろの遠景と、カメラのコンテナを作る
 	var _Spriteset_Map_createBaseSprite = Spriteset_Map.prototype.createBaseSprite;
 	Spriteset_Map.prototype.createBaseSprite = function() {
 		this._cameraParallax = new TilingSprite();
@@ -123,6 +126,7 @@
 		this.addChild(this._cameraContainer);
 	};
 
+	//新しいカメラと枠を作る。カメラ同士を重ねるとindexが大きい方が手前になる
 	Spriteset_Map.prototype.createNewCamera = function(camera, index) {
 		var tw = $gameMap.tileWidth();
 		var th = $gameMap.tileHeight();
@@ -169,6 +173,7 @@
 		delete this._cameras;
 	};
 
+	//マップ画面をそれぞれのカメラが映す位置までスクロールした上で、カメラのTextureに描画していく
 	Spriteset_Map.prototype.renderCameras = function() {
 		if (this._cameras) {
 			var displayPos = $gameMap.saveDisplayPos();
@@ -184,6 +189,7 @@
 		this._baseSprite.visible = !$gameMap._mainCameraDisabled;
 	};
 
+	//$gameMapのスクロールをSpritesetに反映させる。これをしないと見た目が変わらない
 	Spriteset_Map.prototype.changePositions = function() {
 		this.updateParallax();
 		this.updateTilemap();
@@ -194,6 +200,7 @@
 		this._destinationSprite.updatePosition();
 	};
 
+	//カメラバック遠景の画像名や位置を反映する
 	Spriteset_Map.prototype.updateCameraParallax = function() {
 		var parallax = $gameMap._cameraParallax;
 		if (parallax) {
@@ -221,6 +228,8 @@
 		this.updateCameraParallax();
 	};
 
+	//カメラを生成する。マップをまたぐ時やセーブ・ロード時に対応するためこちらから起動する
+	//indexに-1を指定すると消えているメイン画面を再表示できる
 	Game_Map.prototype.addCamera = function(index, x, y, width, height) {
 		if (index === -1) {
 			delete this._mainCameraDisabled;
@@ -237,6 +246,7 @@
 		}
 	};
 
+	//カメラを消去する。indexに-1を指定するとメイン画面を非表示にできる
 	Game_Map.prototype.removeCamera = function(index) {
 		if (index === -1) {
 			this._mainCameraDisabled = true;
@@ -258,6 +268,7 @@
 		}
 	};
 
+	//カメラのターゲットを固定の座標(左上)で指定する
 	Game_Map.prototype.cameraToXy = function(cameraId, x, y) {
 		if (this._cameras && this._cameras[cameraId]) {
 			this._cameras[cameraId].target = 0;
@@ -266,12 +277,14 @@
 		}
 	};
 
+	//カメラのターゲットに特定のマップイベントを指定する
 	Game_Map.prototype.cameraToEvent = function(cameraId, eventId) {
 		if (this._cameras && this._cameras[cameraId]) {
 			this._cameras[cameraId].target = eventId;
 		}
 	};
 
+	//カメラのターゲットになっているマップイベントが中央に映るように設定する
 	Game_Map.prototype.updateCameras = function() {
 		if (this._cameras) {
 			this._cameras.forEach(function(camera) {
@@ -283,6 +296,7 @@
 		}
 	};
 
+	//画面の位置をカメラがターゲットに指定する位置までスクロールしていく
 	Game_Map.prototype.scrollDisplayPos = function(index) {
 		var camera = this._cameras[index];
 		if (this.isLoopHorizontal()) {
@@ -311,6 +325,7 @@
 		}
 	};
 
+	//画面のスクロール位置の記録と復帰
 	Game_Map.prototype.saveDisplayPos = function() {
 		return {dx: this._displayX, dy: this._displayY, px: this._parallaxX, py: this._parallaxY};
 	};
@@ -322,6 +337,7 @@
 		this._parallaxY = data.py;
 	};
 
+	//プラグインコマンドで指定されている場合はカメラバック遠景を設定する
 	var _Game_Map_changeParallax = Game_Map.prototype.changeParallax;
 	Game_Map.prototype.changeParallax = function(name, loopX, loopY, sx, sy) {
 		if (this._cameraParallax && !this._cameraParallax.disabled) {
@@ -332,6 +348,7 @@
 		}
 	};
 
+	//カメラバック遠景のスクロール
 	var _Game_Map_updateParallax = Game_Map.prototype.updateParallax;
 	Game_Map.prototype.updateParallax = function() {
 		_Game_Map_updateParallax.apply(this, arguments);
@@ -341,10 +358,13 @@
 		}
 	};
 
+	//プレイヤーが近くにいないと自律移動が止まってしまう仕様を無効化する
+	//カメラに映されていてもプレイヤーが遠ざかると動きが止まるというのは奇妙なので
 	Game_CharacterBase.prototype.isNearTheScreen = function() {
 		return true;
 	};
 
+	//カメラの位置をキャラクターが中央に映るように調節する
 	Game_CharacterBase.prototype.centering = function(camera) {
 		camera.targetX = this._realX + 0.5 - camera.width / 2;
 		camera.targetY = this._realY + 0.5 - camera.height / 2;
@@ -384,6 +404,7 @@
 		}
 	};
 
+	//カメラを設定する。quarterなどのオプションは実は手動設定の省略記法でしかない
 	Game_Interpreter.prototype.setCamera = function(typeOrIndex, x, y, width, height) {
 		switch (typeOrIndex.toLowerCase()) {
 			case 'vertical':
@@ -436,6 +457,7 @@
 		$gameMap.removeCamera(+index);
 	};
 
+	//カメラ枠の幅と色を設定する。blackとwhiteは特別扱いで、他の色はff0000などのカラーコードで指定する
 	Game_Interpreter.prototype.frameCamera = function(lineWidth, lineColor) {
 		lineWidth = +lineWidth;
 		switch (lineColor.toLowerCase()) {
@@ -462,12 +484,14 @@
 		$gameMap.removeAllCameras();
 	};
 
+	//マップスタート時に$gameMapに登録されたすべてのカメラを再配置する
 	var _Scene_Map_start = Scene_Map.prototype.start;
 	Scene_Map.prototype.start = function() {
 		_Scene_Map_start.apply(this, arguments);
 		this._spriteset.createAllCameras();
 	};
 
+	//各カメラのターゲット設定
 	var _Scene_Map_update = Scene_Map.prototype.update;
 	Scene_Map.prototype.update = function() {
 		_Scene_Map_update.apply(this, arguments);
