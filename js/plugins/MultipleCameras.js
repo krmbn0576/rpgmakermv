@@ -3,6 +3,7 @@
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
 // 2017/02/01 カメラのバックに遠景を設定可能に。マップ遠景がスクロールしないバグを修正
+// 2017/02/05 カメラをクリックorタップして移動できるように。一部カメラのタッチ移動禁止機能を追加
 //=============================================================================
 
 /*:
@@ -65,6 +66,7 @@
  * また、枠の幅を0にすれば枠線なしでカメラを配置できます。
  * もっと凝った枠にしたい時は枠線を消し、代わりにピクチャーを表示しましょう。
  * 
+ * 
  * ・カメラの消去
  * camera remove カメラ番号
  * 指定したカメラ番号のカメラを消去します。
@@ -81,6 +83,19 @@
  * 
  * camera parallax map
  * 遠景の設定先をマップに戻します。
+ * 
+ * 
+ * ・カメラのタッチ設定
+ * camera notouch カメラ番号A カメラ番号B...
+ * 指定した番号のカメラ(複数可)をクリックorタップしても
+ * プレイヤーがそこに移動していかないようになります。
+ * カメラ番号に「-1」を含めた場合はメイン画面がタッチ移動不可能になります。
+ * ここで指定しなかった番号のカメラはタッチ移動可能になります。
+ * 
+ * なおタッチ可能なカメラが重なっている時は、
+ * 上に重なっている(=カメラ番号の大きい)カメラがタッチされます。
+ * 上のカメラがタッチ不可能な場合は、下のカメラがタッチされます。
+ * 
  * 
  * ・リセット
  * camera reset
@@ -262,6 +277,7 @@
 
 	Game_Map.prototype.removeAllCameras = function() {
 		delete this._mainCameraDisabled;
+		delete this._noTouchCameras;
 		delete this._cameras;
 		if (SceneManager._scene instanceof Scene_Map) {
 			SceneManager._scene._spriteset.removeAllCameras();
@@ -337,6 +353,70 @@
 		this._parallaxY = data.py;
 	};
 
+	//指定したカメラがタッチ移動可能かどうか
+	Game_Map.prototype.canTouchCamera = function(index) {
+		var canTouch = !this._noTouchCameras || !this._noTouchCameras.contains(index);
+		var camera = this._cameras[index];
+		if (index === -1) {
+			return canTouch && !this._mainCameraDisabled;
+		} else if (!camera || !canTouch) {
+			return false;
+		} else {
+			var x = TouchInput.x / this.tileWidth() - camera.x;
+			var y = TouchInput.y / this.tileHeight() - camera.y;
+			return x >= 0 && y >= 0 && x < camera.width && y < camera.height;
+		}
+	};
+
+	//タッチ移動可能なカメラから座標を取得する
+	var _Game_Map_canvasToMapX = Game_Map.prototype.canvasToMapX;
+	Game_Map.prototype.canvasToMapX = function(x) {
+		if (!this._cameras) {
+			return _Game_Map_canvasToMapX.apply(this, arguments);
+		} else {
+			for (var i = this._cameras.length - 1; i >= 0; i--) {
+				if (this.canTouchCamera(i)) {
+					var camera = this._cameras[i];
+					var dx = this._displayX;
+					var endX = this.width() - camera.width;
+					this._displayX = endX < 0 ? endX / 2 : camera.targetX.clamp(0, endX);
+					this._displayX -= camera.x;
+					var value = _Game_Map_canvasToMapX.apply(this, arguments);
+					this._displayX = dx;
+					return value;
+				}
+			}
+			if (this.canTouchCamera(-1)) {
+				return _Game_Map_canvasToMapX.apply(this, arguments);
+			}
+			return null;
+		}
+	};
+
+	var _Game_Map_canvasToMapY = Game_Map.prototype.canvasToMapY;
+	Game_Map.prototype.canvasToMapY = function(y) {
+		if (!this._cameras) {
+			return _Game_Map_canvasToMapY.apply(this, arguments);
+		} else {
+			for (var i = this._cameras.length - 1; i >= 0; i--) {
+				if (this.canTouchCamera(i)) {
+					var camera = this._cameras[i];
+					var dy = this._displayY;
+					var endY = this.height() - camera.height;
+					this._displayY = endY < 0 ? endY / 2 : camera.targetY.clamp(0, endY);
+					this._displayY -= camera.y;
+					var value = _Game_Map_canvasToMapY.apply(this, arguments);
+					this._displayY = dy;
+					return value;
+				}
+			}
+			if (this.canTouchCamera(-1)) {
+				return _Game_Map_canvasToMapY.apply(this, arguments);
+			}
+			return null;
+		}
+	};
+
 	//プラグインコマンドで指定されている場合はカメラバック遠景を設定する
 	var _Game_Map_changeParallax = Game_Map.prototype.changeParallax;
 	Game_Map.prototype.changeParallax = function(name, loopX, loopY, sx, sy) {
@@ -394,6 +474,9 @@
 					break;
 				case 'parallax':
 					this.parallaxCamera.apply(this, args);
+					break;
+				case 'notouch':
+					this.noTouchCamera(args);
 					break;
 				case 'reset':
 					this.resetCamera();
@@ -478,6 +561,14 @@
 	Game_Interpreter.prototype.parallaxCamera = function(mode) {
 		$gameMap._cameraParallax = $gameMap._cameraParallax || {};
 		$gameMap._cameraParallax.disabled = mode !== 'back';
+	};
+
+	Game_Interpreter.prototype.noTouchCamera = function(idList) {
+		$gameMap._noTouchCameras = idList.map(function(id) {
+			return +id;
+		}).filter(function(id) {
+			return !isNaN(id);
+		});
 	};
 
 	Game_Interpreter.prototype.resetCamera = function() {
