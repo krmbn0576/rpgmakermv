@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // 2017/02/01 カメラのバックに遠景を設定可能に。マップ遠景がスクロールしないバグを修正
 // 2017/02/05 カメラをクリックorタップして移動できるように。一部カメラのタッチ移動禁止機能を追加
+// 2017/02/07 アニメーションとフキダシの表示がズレていたので修正
 //=============================================================================
 
 /*:
@@ -210,6 +211,10 @@
 		this.updateTilemap();
 		this._characterSprites.forEach(function(character) {
 			character.updatePosition();
+			character._animationSprites.forEach(function(animation) {
+				animation.updatePosition();
+			});
+			character.updateBalloon();
 		});
 		this.updateShadow();
 		this._destinationSprite.updatePosition();
