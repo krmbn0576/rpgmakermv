@@ -28,10 +28,5 @@ function v(id, value) {
 function hook(baseClass, target, addition) {
 	if (baseClass.prototype[target]) baseClass = baseClass.prototype;
 	else if (!baseClass[target]) throw new Error('フック先が無いんですけど！');
-	var origin = baseClass[target];
-	baseClass[target] = function() {
-		arguments[arguments.length] = origin;
-		arguments.length++;
-		return addition.apply(this, arguments);
-	};
+	baseClass[target] = addition(baseClass[target]);
 }
