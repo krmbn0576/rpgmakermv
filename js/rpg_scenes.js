@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_scenes.js v1.3.4
+// rpg_scenes.js v1.3.5
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -455,7 +455,6 @@ Scene_Map.prototype.terminate = function() {
         SceneManager.snapForBackground();
     }
     $gameScreen.clearZoom();
-    //TODO: Ivan: investigate why is it working, what keeps Scene_Map from freeing stuff
     this.removeChild(this._fadeSprite);
     this.removeChild(this._mapNameWindow);
     this.removeChild(this._windowLayer);
@@ -499,11 +498,15 @@ Scene_Map.prototype.processMapTouch = function() {
             if (this._touchCount === 0 || this._touchCount >= 15) {
                 var x = $gameMap.canvasToMapX(TouchInput.x);
                 var y = $gameMap.canvasToMapY(TouchInput.y);
+                if (!TouchInput.isMousePressed()) {
+                    $gameTemp.setIsMapTouched(true);
+                }
                 $gameTemp.setDestination(x, y);
             }
             this._touchCount++;
         } else {
             this._touchCount = 0;
+            $gameTemp.setIsMapTouched(false);
         }
     }
 };

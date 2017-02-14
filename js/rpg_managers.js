@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_managers.js v1.3.4
+// rpg_managers.js v1.3.5
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1296,9 +1296,9 @@ AudioManager.audioFileExt = function() {
 };
 
 AudioManager.shouldUseHtml5Audio = function() {
-    // We use HTML5 Audio to play BGM instead of Web Audio API
-    // because decodeAudioData() is very slow on Android Chrome.
-    return Utils.isAndroidChrome() && !Decrypter.hasEncryptedAudio;
+    // The only case where we wanted html5audio was android/ no encrypt
+    // Atsuma-ru asked to force webaudio there too, so just return false for ALL    // return Utils.isAndroidChrome() && !Decrypter.hasEncryptedAudio;
+ return false;
 };
 
 AudioManager.checkErrors = function() {
