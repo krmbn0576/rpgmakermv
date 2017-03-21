@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_scenes.js v1.3.5
+// rpg_scenes.js v1.4.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -498,15 +498,11 @@ Scene_Map.prototype.processMapTouch = function() {
             if (this._touchCount === 0 || this._touchCount >= 15) {
                 var x = $gameMap.canvasToMapX(TouchInput.x);
                 var y = $gameMap.canvasToMapY(TouchInput.y);
-                if (!TouchInput.isMousePressed()) {
-                    $gameTemp.setIsMapTouched(true);
-                }
                 $gameTemp.setDestination(x, y);
             }
             this._touchCount++;
         } else {
             this._touchCount = 0;
-            $gameTemp.setIsMapTouched(false);
         }
     }
 };

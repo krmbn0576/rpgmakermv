@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_objects.js v1.3.5
+// rpg_objects.js v1.4.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -16,7 +16,6 @@ Game_Temp.prototype.initialize = function() {
     this._commonEventId = 0;
     this._destinationX = null;
     this._destinationY = null;
-    this._isMapTouch = false;
 };
 
 Game_Temp.prototype.isPlaytest = function() {
@@ -59,15 +58,6 @@ Game_Temp.prototype.destinationX = function() {
 
 Game_Temp.prototype.destinationY = function() {
     return this._destinationY;
-};
-
-//
-Game_Temp.prototype.isMapTouched = function() {
-  return this._isMapTouch;
-};
-
-Game_Temp.prototype.setIsMapTouched = function(val) {
-    this._isMapTouch = val;
 };
 
 //-----------------------------------------------------------------------------
@@ -4278,10 +4268,10 @@ Game_Actor.prototype.testEscape = function(item) {
 };
 
 Game_Actor.prototype.meetsUsableItemConditions = function(item) {
-    if($gameParty.inBattle() && !BattleManager.canEscape() && this.testEscape(item)){
+    if ($gameParty.inBattle() && !BattleManager.canEscape() && this.testEscape(item)) {
         return false;
     }
-    return this.canMove() && this.isOccasionOk(item);
+    return Game_BattlerBase.prototype.meetsUsableItemConditions.call(this, item);
 };
 
 //-----------------------------------------------------------------------------
@@ -7686,7 +7676,7 @@ Game_Player.prototype.updateDashing = function() {
         return;
     }
     if (this.canMove() && !this.isInVehicle() && !$gameMap.isDashDisabled()) {
-        this._dashing = $gameTemp.isMapTouched() ? $gameTemp.isDestinationValid() : this.isDashButtonPressed(); // || $gameTemp.isDestinationValid();
+        this._dashing = this.isDashButtonPressed() || $gameTemp.isDestinationValid();
     } else {
         this._dashing = false;
     }

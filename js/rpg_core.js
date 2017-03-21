@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_core.js v1.3.5
+// rpg_core.js v1.4.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -3043,10 +3043,6 @@ TouchInput.update = function() {
  */
 TouchInput.isPressed = function() {
     return this._mousePressed || this._screenPressed;
-};
-
-TouchInput.isMousePressed = function() {
-    return this._mousePressed;
 };
 
 /**
