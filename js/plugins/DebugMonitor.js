@@ -3,6 +3,7 @@
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
 // 2016/10/25 リアルタイム変更モードの起動キーをCtrlからTabに変更しました
+// 2017/03/25 プラグインパラメータに0を指定できないバグを修正しました
 //=============================================================================
 
 /*:
@@ -42,12 +43,16 @@
 	'use strict';
 	if (!Utils.isOptionValid('test') || !Utils.isNwjs()) return;
 	var parameters = PluginManager.parameters('DebugMonitor');
-	var monitorX = +parameters['monitorX'] || 0;
-	var monitorY = +parameters['monitorY'] || 0;
-	var monitorW = +parameters['monitorW'] || 240;
+	var monitorX = toNumber(parameters['monitorX'], 0);
+	var monitorY = toNumber(parameters['monitorY'], 0);
+	var monitorW = toNumber(parameters['monitorW'], 240);
 	var active = false;
 	var switches = {};
 	var variables = {};
+
+	function toNumber(str, def) {
+		return /^\d+$/.test(str) ? +str : def;
+	}
 
 	//モニターの定義。Tabキーでリアルタイム変更モード
 	function Window_Monitor() {

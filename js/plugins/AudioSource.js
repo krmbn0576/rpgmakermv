@@ -7,6 +7,7 @@
 // 2016/12/04 セーブ・ロードに対応、BGS並行演奏プラグイン(ParallelBgs.js)との連携
 // 2017/01/07 アニメーションの音源化に対応、戦闘を挟んでも正常動作するようにした
 // 2017/01/09 ルート設定のSE音源化もoffに設定できるようにした
+// 2017/03/25 プラグインパラメータに0を指定できないバグを修正しました
 //=============================================================================
 
 /*:
@@ -102,9 +103,9 @@
 	'use strict';
 	var parameters = PluginManager.parameters('AudioSource');
 	var listener = parameters['listener'];
-	var decay = (+parameters['decay'] || 85).clamp(0, Infinity);
-	var pan = +parameters['pan'] || 10;
-	var cutoff = (+parameters['cutoff'] || 1).clamp(0, 100);
+	var decay = toNumber(parameters['decay'], 85).clamp(0, Infinity);
+	var pan = toNumber(parameters['pan'], 10);
+	var cutoff = toNumber(parameters['cutoff'], 1).clamp(0, 100);
 
 	//効果音の音量調節（マップイベントのルート設定から鳴らした時のみ）
 	var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
@@ -185,6 +186,10 @@
 			}
 		}
 	};
+
+	function toNumber(str, def) {
+		return /^\d+$/.test(str) ? +str : def;
+	}
 
 	//BGMとBGSの音量と位相を調節する
 	function updateParameters(audio, source, isBgm) {
