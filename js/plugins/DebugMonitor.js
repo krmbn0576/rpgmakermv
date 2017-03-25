@@ -51,7 +51,7 @@
 	var variables = {};
 
 	function toNumber(str, def) {
-		return /^\d+$/.test(str) ? +str : def;
+		return isNaN(str) ? def : +(str || def);
 	}
 
 	//モニターの定義。Tabキーでリアルタイム変更モード

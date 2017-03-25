@@ -188,7 +188,7 @@
 	};
 
 	function toNumber(str, def) {
-		return /^\d+$/.test(str) ? +str : def;
+		return isNaN(str) ? def : +(str || def);
 	}
 
 	//BGMとBGSの音量と位相を調節する
