@@ -2,6 +2,8 @@
 // TimeEvent.js
 // MIT License (C) 2017 くらむぼん
 // http://opensource.org/licenses/mit-license.php
+// ----------------------------------------------------------------------------
+// 2017/05/01 ロード後にゲームが再開できない場合があるバグを修正
 //=============================================================================
 
 /*:
@@ -79,7 +81,7 @@
 	}
 
 	Game_System.prototype.addTimeEvent = function(args) {
-		this._timeEvents = (this._timeEvents || []).filter(function() {return true;});
+		this._timeEvents = (this._timeEvents || []).filter(function(timeEvent) {return !!timeEvent;});
 		var command = args[0].toLowerCase();
 		var timeEvent = {command: command, minutes: +args[1], rate: args[2] / 100, target: args[3]};
 		switch (command) {
@@ -106,7 +108,7 @@
 
 	Game_System.prototype.executeTimeEvents = function() {
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
-			if (!(timeEvent.time + timeEvent.minutes * 60 * 1000 < Date.now())) return;
+			if (!(timeEvent && timeEvent.time + timeEvent.minutes * 60 * 1000 < Date.now())) return;
 			var target = toNumber(timeEvent.target);
 			if (canHappen(timeEvent)) switch (timeEvent.command) {
 				case 'on':
@@ -143,13 +145,13 @@
 	Game_System.prototype.onAfterLoad = function() {
 		_Game_System_onAfterLoad.apply(this, arguments);
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
-			if (timeEvent.command === 'reset') {
+			if (timeEvent && timeEvent.command === 'reset') {
 				timeEvent.list.forEach(function(variableId) {
 					$gameVariables.setValue(variableId, 0);
 				});
 				delete timeEvents[index];
 			}
-			if (timeEvent.command === 'alloff') {
+			if (timeEvent && timeEvent.command === 'alloff') {
 				timeEvent.list.forEach(function(switchId) {
 					$gameSwitches.setValue(switchId, false);
 				});
