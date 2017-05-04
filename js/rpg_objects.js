@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_objects.js v1.4.0
+// rpg_objects.js v1.4.1
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -269,6 +269,10 @@ Game_System.prototype.replayWalkingBgm = function() {
     if (this._walkingBgm) {
         AudioManager.playBgm(this._walkingBgm);
     }
+};
+
+Game_System.prototype.saveWalkingBgm2 = function() {
+	this._walkingBgm = $dataMap.bgm;
 };
 
 //-----------------------------------------------------------------------------
@@ -5785,7 +5789,11 @@ Game_Map.prototype.canvasToMapY = function(y) {
 
 Game_Map.prototype.autoplay = function() {
     if ($dataMap.autoplayBgm) {
-        AudioManager.playBgm($dataMap.bgm);
+        if ($gamePlayer.isInVehicle()) {
+            $gameSystem.saveWalkingBgm2();
+        } else {
+            AudioManager.playBgm($dataMap.bgm);
+        }
     }
     if ($dataMap.autoplayBgs) {
         AudioManager.playBgs($dataMap.bgs);
