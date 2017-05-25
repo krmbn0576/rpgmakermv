@@ -4,6 +4,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // 2017/05/01 ロード後にゲームが再開できない場合があるバグを修正
+// 2017/05/26 対象となるスイッチと変数の番号の表記に\S[x],\V[x]方式を追加
 //=============================================================================
 
 /*:
@@ -21,7 +22,7 @@
  * プラグインコマンド：
  * ■on 時間(分)が経ったら確率でスイッチをオンする
  * TimeEvent on 時間(分) 確率(％) ONにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
- * 例）TimeEvent on 5 60 3 \S[7] \V[2]>60
+ * 例）TimeEvent on 5 60 \S[3] \S[7] \V[2]>60
  * 5分経ったら60%の確率で「S[0003]:三毛ネコ」スイッチをONする
  * （ただし、S[0007]:赤いボールがONでV[0002]:餌が60より上のとき）
  * 
@@ -62,6 +63,14 @@
 
 (function() {
 	'use strict';
+	function removeEscape(string) {
+		return +string.replace(/\\S\[(\d+)\]/gi, function() {
+			return arguments[1];
+		}).replace(/\\V\[(\d+)\]/gi, function() {
+			return arguments[1];
+		});
+	}
+
 	function toNumber(string) {
 		return +string.replace(/\\V\[(\d+)\]/gi, function() {
 			return $gameVariables.value(parseInt(arguments[1]));
@@ -109,7 +118,7 @@
 	Game_System.prototype.executeTimeEvents = function() {
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
 			if (!(timeEvent && timeEvent.time + timeEvent.minutes * 60 * 1000 < Date.now())) return;
-			var target = toNumber(timeEvent.target);
+			var target = removeEscape(timeEvent.target);
 			if (canHappen(timeEvent)) switch (timeEvent.command) {
 				case 'on':
 					$gameSwitches.setValue(target, true);
