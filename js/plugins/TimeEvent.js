@@ -5,6 +5,7 @@
 // ----------------------------------------------------------------------------
 // 2017/05/01 ロード後にゲームが再開できない場合があるバグを修正
 // 2017/05/26 対象となるスイッチと変数の番号の表記に\S[x],\V[x]方式を追加
+// 2017/05/27 xxxeveryシリーズとeverystopを追加、引数に分と%を許可
 //=============================================================================
 
 /*:
@@ -22,9 +23,11 @@
  * プラグインコマンド：
  * ■on 時間(分)が経ったら確率でスイッチをオンする
  * TimeEvent on 時間(分) 確率(％) ONにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
- * 例）TimeEvent on 5 60 \S[3] \S[7] \V[2]>60
+ * 例）TimeEvent on 5分 60% \S[3] \S[7] \V[2]>60
  * 5分経ったら60%の確率で「S[0003]:三毛ネコ」スイッチをONする
  * （ただし、S[0007]:赤いボールがONでV[0002]:餌が60より上のとき）
+ * ※「分」と「%」は書かなくても大丈夫。\S[3]も3だけでもOK
+ * ※\S[7]と\V[2]>60は7と2にできません、比較する数字(60)と区別できないため
  * 
  * ■off 経過時間がきたら確率でスイッチをオフする
  * TimeEvent off 時間(分) 確率(％) OFFにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
@@ -45,6 +48,24 @@
  * TimeEvent add 時間(分) 確率(％) 変数番号 加算値or加算変数番号 ifスイッチ番号(省略可) if変数条件(省略可)
  * 変数番号に加算値または加算変数番号を足す（マイナスの場合は引く）
  * 
+ * ■onevery 時間(分)ごとに確率でスイッチをオンする
+ * TimeEvent onevery 時間(分) 確率(％) ONにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
+ * ■offevery 経過時間ごとに確率でスイッチをオフする
+ * TimeEvent offevery 時間(分) 確率(％) OFFにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
+ * ■getevery 経過時間ごとに確率でアイテムを１つ得る
+ * TimeEvent getevery 時間(分) 確率(％) 手に入れるアイテム番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
+ * ■joinevery 経過時間ごとに確率でキャラがパーティに加わる
+ * TimeEvent joinevery 時間(分) 確率(％) 加わるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
+ * ■byebyeevery 経過時間ごとに確率でキャラがパーティが別れる
+ * TimeEvent byebyeevery 時間(分) 確率(％) 別れるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
+ * ■commonevery 経過時間ごとに確率でコモンイベントを実行する
+ * TimeEvent commonevery 時間(分) 確率(％) 実行するコモンイベント番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * 
  * ■addevery 経過時間ごとに確率で変数を足す
  * TimeEvent addevery 時間(分) 確率(％) 変数番号 加算値or加算変数番号 ifスイッチ番号(省略可) if変数条件(省略可)
  * 変数番号に加算値または加算変数番号を足す（マイナスの場合は引く）
@@ -55,6 +76,8 @@
  * ■alloff ゲームを開始したときに全てのスイッチをＯＦＦにする
  * TimeEvent alloff スイッチ番号 スイッチ番号 スイッチ番号
  * 
+ * ■everystop すべてのevery系コマンドを中止する
+ * TimeEvent everystop
  * 
  * ライセンス：
  * このプラグインを利用する時は、作者名をプラグインから削除しないでください。
@@ -89,14 +112,22 @@
 		return Math.random() < timeEvent.rate && eval(condition) && eval(condition2);
 	}
 
+	function isEvery(timeEvent) {
+		return timeEvent.command.slice(-5) === 'every';
+	}
+
 	Game_System.prototype.addTimeEvent = function(args) {
 		this._timeEvents = (this._timeEvents || []).filter(function(timeEvent) {return !!timeEvent;});
 		var command = args[0].toLowerCase();
-		var timeEvent = {command: command, minutes: +args[1], rate: args[2] / 100, target: args[3]};
+		var timeEvent = {command: command, minutes: parseFloat(args[1]), rate: parseFloat(args[2]) / 100, target: args[3]};
 		switch (command) {
+			case 'everystop':
+				this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
+					if (isEvery(timeEvent)) delete timeEvents[index];
+				});
+				return;
 			case 'add':
 			case 'addevery':
-				timeEvent.plusMinutes = timeEvent.minutes;
 				timeEvent.increase = args[4];
 				timeEvent.condition = args[5] || 'true';
 				timeEvent.condition2 = args[6] || 'true';
@@ -111,6 +142,7 @@
 				timeEvent.condition2 = args[5] || 'true';
 				break;
 		}
+		if (isEvery(timeEvent)) timeEvent.plusMinutes = timeEvent.minutes;
 		timeEvent.time = Date.now();
 		this._timeEvents.push(timeEvent);
 	};
@@ -119,7 +151,7 @@
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
 			if (!(timeEvent && timeEvent.time + timeEvent.minutes * 60 * 1000 < Date.now())) return;
 			var target = removeEscape(timeEvent.target);
-			if (canHappen(timeEvent)) switch (timeEvent.command) {
+			if (canHappen(timeEvent)) switch (isEvery(timeEvent) ? timeEvent.command.slice(0, -5) : timeEvent.command) {
 				case 'on':
 					$gameSwitches.setValue(target, true);
 					break;
@@ -136,16 +168,15 @@
 					$gameParty.removeActor(target);
 					break;
 				case 'common':
-					$gameTemp.reserveCommonEvent(target);
+					$gameTemp.enqueueCommonEvent(target);
 					break;
 				case 'add':
-				case 'addevery':
 					$gameVariables.setValue(target, $gameVariables.value(target) + toNumber(timeEvent.increase));
 					break;
 				default:
 					break;
 			}
-			if (timeEvent.command === 'addevery') timeEvent.minutes += timeEvent.plusMinutes;
+			if (isEvery(timeEvent)) timeEvent.minutes += timeEvent.plusMinutes;
 			else delete timeEvents[index];
 		});
 	};
@@ -156,22 +187,39 @@
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
 			if (timeEvent && timeEvent.command === 'reset') {
 				timeEvent.list.forEach(function(variableId) {
-					$gameVariables.setValue(variableId, 0);
+					$gameVariables.setValue(removeEscape(variableId), 0);
 				});
 				delete timeEvents[index];
 			}
 			if (timeEvent && timeEvent.command === 'alloff') {
 				timeEvent.list.forEach(function(switchId) {
-					$gameSwitches.setValue(switchId, false);
+					$gameSwitches.setValue(removeEscape(switchId), false);
 				});
 				delete timeEvents[index];
 			}
 		});
 	};
 
+	var _Game_Temp_initialize = Game_Temp.prototype.initialize;
+	Game_Temp.prototype.initialize = function() {
+		_Game_Temp_initialize.apply(this, arguments);
+		this._commonEventQueue = [];
+	};
+
+	Game_Temp.prototype.enqueueCommonEvent = function(commonEventId) {
+		this._commonEventQueue.push(commonEventId);
+	};
+
+	Game_Temp.prototype.updateCommonEventQueue = function() {
+		if (this._commonEventQueue.length !== 0 && !this.isCommonEventReserved()) {
+			this.reserveCommonEvent(this._commonEventQueue.shift());
+		}
+	};
+
 	var _Scene_Map_update = Scene_Map.prototype.update;
 	Scene_Map.prototype.update = function() {
 		$gameSystem.executeTimeEvents();
+		$gameTemp.updateCommonEventQueue();
 		_Scene_Map_update.apply(this, arguments);
 	};
 

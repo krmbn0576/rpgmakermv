@@ -30,3 +30,9 @@ function hook(baseClass, target, addition) {
 	else if (!baseClass[target]) throw new Error('フック先が無いんですけど！');
 	baseClass[target] = addition(baseClass[target]);
 }
+
+function c() {
+	var args = Array.prototype.map.call(arguments, function(arg) {return arg.toString();});
+	var command = args.shift();
+	$gameMap._interpreter.pluginCommand(command, args);
+}
