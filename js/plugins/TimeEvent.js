@@ -22,52 +22,53 @@
  * 
  * プラグインコマンド：
  * ■on 時間(分)が経ったら確率でスイッチをオンする
- * TimeEvent on 時間(分) 確率(％) ONにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent on 時間(分) 確率(％) ONにするスイッチ番号 if条件1(省略可) if条件2(省略可)
  * 例）TimeEvent on 5分 60% \S[3] \S[7] \V[2]>60
  * 5分経ったら60%の確率で「S[0003]:三毛ネコ」スイッチをONする
  * （ただし、S[0007]:赤いボールがONでV[0002]:餌が60より上のとき）
+ * ※if条件1,2には「スイッチ番号」か「変数の比較」が入ります。省略可
  * ※「分」と「%」は書かなくても大丈夫。\S[3]も3だけでもOK
  * ※\S[7]と\V[2]>60は7と2にできません、比較する数字(60)と区別できないため
  * 
  * ■off 経過時間がきたら確率でスイッチをオフする
- * TimeEvent off 時間(分) 確率(％) OFFにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent off 時間(分) 確率(％) OFFにするスイッチ番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■get 経過時間がきたら確率でアイテムを１つ得る
- * TimeEvent get 時間(分) 確率(％) 手に入れるアイテム番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent get 時間(分) 確率(％) 手に入れるアイテム番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■join 経過時間がきたら確率でキャラがパーティに加わる
- * TimeEvent join 時間(分) 確率(％) 加わるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent join 時間(分) 確率(％) 加わるアクター番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■byebye 経過時間がきたら確率でキャラがパーティが別れる
- * TimeEvent byebye 時間(分) 確率(％) 別れるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent byebye 時間(分) 確率(％) 別れるアクター番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■common 経過時間がきたら確率でコモンイベントを実行する
- * TimeEvent common 時間(分) 確率(％) 実行するコモンイベント番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent common 時間(分) 確率(％) 実行するコモンイベント番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■add 経過時間がきたら確率で変数を足す
- * TimeEvent add 時間(分) 確率(％) 変数番号 加算値or加算変数番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent add 時間(分) 確率(％) 変数番号 加算値or加算変数番号 if条件1(省略可) if条件2(省略可)
  * 変数番号に加算値または加算変数番号を足す（マイナスの場合は引く）
  * 
  * ■onevery 時間(分)ごとに確率でスイッチをオンする
- * TimeEvent onevery 時間(分) 確率(％) ONにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent onevery 時間(分) 確率(％) ONにするスイッチ番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■offevery 経過時間ごとに確率でスイッチをオフする
- * TimeEvent offevery 時間(分) 確率(％) OFFにするスイッチ番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent offevery 時間(分) 確率(％) OFFにするスイッチ番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■getevery 経過時間ごとに確率でアイテムを１つ得る
- * TimeEvent getevery 時間(分) 確率(％) 手に入れるアイテム番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent getevery 時間(分) 確率(％) 手に入れるアイテム番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■joinevery 経過時間ごとに確率でキャラがパーティに加わる
- * TimeEvent joinevery 時間(分) 確率(％) 加わるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent joinevery 時間(分) 確率(％) 加わるアクター番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■byebyeevery 経過時間ごとに確率でキャラがパーティが別れる
- * TimeEvent byebyeevery 時間(分) 確率(％) 別れるアクター番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent byebyeevery 時間(分) 確率(％) 別れるアクター番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■commonevery 経過時間ごとに確率でコモンイベントを実行する
- * TimeEvent commonevery 時間(分) 確率(％) 実行するコモンイベント番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent commonevery 時間(分) 確率(％) 実行するコモンイベント番号 if条件1(省略可) if条件2(省略可)
  * 
  * ■addevery 経過時間ごとに確率で変数を足す
- * TimeEvent addevery 時間(分) 確率(％) 変数番号 加算値or加算変数番号 ifスイッチ番号(省略可) if変数条件(省略可)
+ * TimeEvent addevery 時間(分) 確率(％) 変数番号 加算値or加算変数番号 if条件1(省略可) if条件2(省略可)
  * 変数番号に加算値または加算変数番号を足す（マイナスの場合は引く）
  * 
  * ■reset ゲームを開始したときに全ての変数をゼロにする
@@ -106,7 +107,9 @@
 		}).replace(/\\V\[(\d+)\]/gi, function() {
 			return $gameVariables.value(parseInt(arguments[1]));
 		});
-		var condition2 = timeEvent.condition2.replace(/\\V\[(\d+)\]/gi, function() {
+		var condition2 = timeEvent.condition2.replace(/\\S\[(\d+)\]/gi, function() {
+			return $gameSwitches.value(parseInt(arguments[1]));
+		}).replace(/\\V\[(\d+)\]/gi, function() {
 			return $gameVariables.value(parseInt(arguments[1]));
 		});
 		return Math.random() < timeEvent.rate && eval(condition) && eval(condition2);
