@@ -8,6 +8,7 @@
 // 2017/01/07 アニメーションの音源化に対応、戦闘を挟んでも正常動作するようにした
 // 2017/01/09 ルート設定のSE音源化もoffに設定できるようにした
 // 2017/03/25 プラグインパラメータに0を指定できないバグを修正しました
+// 2017/06/04 BGMとBGSの再生コマンドを連打するとノイズが発生する不具合と、オプション音量を変更した瞬間音量調節が無効になるバグを修正しました
 //=============================================================================
 
 /*:
@@ -145,13 +146,61 @@
 	AudioManager.updateAudioSource = function() {
 		updateParameters(this._currentBgm, $gameMap.event($gameSystem._bgmSource), true);
 		if ($gameSystem._bgsSources) {
-			if (!AudioManager.iterateAllBgs) return delete $gameSystem._bgsSources;
-			AudioManager.iterateAllBgs(function() {
+			if (!this.iterateAllBgs) return delete $gameSystem._bgsSources;
+			this.iterateAllBgs(function() {
 				updateParameters(this._currentBgs, $gameMap.event($gameSystem._bgsSources[this.getBgsLineIndex()]));
 			}.bind(this));
 		}
 		else updateParameters(this._currentBgs, $gameMap.event($gameSystem._bgsSource));
 	};
+
+	//BGM、BGSの音量が自動調節されている場合はイベントコマンドからのAudioBufferの調節を無効にする
+	//（同一フレームに複数回の音量変化が含まれるとノイズが発生するため）
+	var _AudioManager_updateBgmParameters = AudioManager.updateBgmParameters;
+	AudioManager.updateBgmParameters = function(bgm) {
+		if ($gameMap && $gameMap.event($gameSystem._bgmSource)) return;
+		_AudioManager_updateBgmParameters.apply(this, arguments);
+	};
+
+	var _AudioManager_updateBgsParameters = AudioManager.updateBgsParameters;
+	AudioManager.updateBgsParameters = function(bgs) {
+		if ($gameMap && $gameSystem) {
+			if ($gameSystem._bgsSources && this.getBgsLineIndex) {
+				if ($gameMap.event($gameSystem._bgsSources[this.getBgsLineIndex()])) return;
+			} else {
+				if ($gameMap.event($gameSystem._bgsSource)) return;
+			}
+		}
+		_AudioManager_updateBgsParameters.apply(this, arguments);
+	};
+
+	//BGM、BGSのオプション側の音量を変えた時にちゃんと音量調節されるようにする
+	Object.defineProperty(AudioManager, 'bgmVolume', {
+		get: function() {
+			return this._bgmVolume;
+		},
+		set: function(value) {
+			this._bgmVolume = value;
+			this.updateBgmParameters(this._currentBgm);
+			if ($gameMap && $gameSystem) this.updateAudioSource();
+		},
+		configurable: true
+	});
+
+	Object.defineProperty(AudioManager, 'bgsVolume', {
+		get: function() {
+			return this._bgsVolume;
+		},
+		set: function(value) {
+			this._bgsVolume = value;
+			if (this.iterateAllBgs) this.iterateAllBgs(function() {
+				this.updateBgsParameters(this._currentBgs);
+			}.bind(this));
+			else this.updateBgsParameters(this._currentBgs);
+			if ($gameMap && $gameSystem) this.updateAudioSource();
+		},
+		configurable: true
+	});
 
 	var _Game_Map_update = Game_Map.prototype.update;
 	Game_Map.prototype.update = function(sceneActive) {
@@ -200,7 +249,7 @@
 			if (audio.volume < cutoff) audio.volume = 0;
 			var buffer = AudioManager[isBgm ? '_bgmBuffer' : '_bgsBuffer'];
 			if (buffer && buffer._gainNode) buffer._gainNode.gain.cancelScheduledValues(0);
-			AudioManager['update' + (isBgm ? 'Bgm' : 'Bgs') + 'Parameters'](audio);
+			AudioManager.updateBufferParameters(buffer, AudioManager[isBgm ? '_bgmVolume' : '_bgsVolume'], audio);
 			audio.volume = lastVolume;
 			audio.pan = lastPan;
 		}
