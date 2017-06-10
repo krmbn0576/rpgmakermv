@@ -22,5 +22,6 @@ var $plugins =
 {"name":"ParallelBgs","status":true,"description":"BGS並行演奏プラグイン","parameters":{}},
 {"name":"EasingPicture","status":true,"description":"ピクチャーの移動パターンを増やします。","parameters":{}},
 {"name":"MultipleCameras","status":true,"description":"画面に複数のカメラ（視点）を配置します。","parameters":{}},
-{"name":"TimeEvent","status":true,"description":"時間の経過に応じてイベントを起こします。","parameters":{}}
+{"name":"TimeEvent","status":true,"description":"時間の経過に応じてイベントを起こします。","parameters":{}},
+{"name":"MessageCount","status":true,"description":"文章だけの長いシーンを検出します。","parameters":{"warningCount":"10"}}
 ];
