@@ -175,28 +175,25 @@
 	};
 
 	//BGM、BGSのオプション側の音量を変えた時にちゃんと音量調節されるようにする
+	var _AudioManager_bgmVolume = Object.getOwnPropertyDescriptor(AudioManager, 'bgmVolume');
 	Object.defineProperty(AudioManager, 'bgmVolume', {
 		get: function() {
-			return this._bgmVolume;
+			return _AudioManager_bgmVolume.get.call(this);
 		},
 		set: function(value) {
-			this._bgmVolume = value;
-			this.updateBgmParameters(this._currentBgm);
+			_AudioManager_bgmVolume.set.call(this, value);
 			if ($gameMap && $gameSystem) this.updateAudioSource();
 		},
 		configurable: true
 	});
 
+	var _AudioManager_bgsVolume = Object.getOwnPropertyDescriptor(AudioManager, 'bgsVolume');
 	Object.defineProperty(AudioManager, 'bgsVolume', {
 		get: function() {
-			return this._bgsVolume;
+			return _AudioManager_bgsVolume.get.call(this);
 		},
 		set: function(value) {
-			this._bgsVolume = value;
-			if (this.iterateAllBgs) this.iterateAllBgs(function() {
-				this.updateBgsParameters(this._currentBgs);
-			}.bind(this));
-			else this.updateBgsParameters(this._currentBgs);
+			_AudioManager_bgsVolume.set.call(this, value);
 			if ($gameMap && $gameSystem) this.updateAudioSource();
 		},
 		configurable: true
