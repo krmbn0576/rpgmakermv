@@ -104,10 +104,11 @@
 
 	var _Game_Interpreter_command111 = Game_Interpreter.prototype.command111;
 	Game_Interpreter.prototype.command111 = function() {
-		_Game_Interpreter_command111.apply(this, arguments);
+		var result = _Game_Interpreter_command111.apply(this, arguments);
 		if (this._params[0] === 11) {
 			onSceneEnded();
 		}
+		return result;
 	};
 
 	var _SceneManager_goto = SceneManager.goto;
