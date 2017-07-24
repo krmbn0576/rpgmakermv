@@ -374,14 +374,13 @@
                         document.body.appendChild(image);
                     });
                 } else if (image.width === 480 && image.height === 256) {
-                    var tilesets = convertChipset(image);
-                    Object.keys(tilesets).forEach(function(key) {
-                        urlToImage(tilesets[key], function (image) {
-                            var p = document.createElement('p');
-                            p.innerHTML = key;
-                            document.body.appendChild(p);
-                            document.body.appendChild(image);
-                        });
+                    convertChipset(image).forEach(function(tileset) {
+                        var p = document.createElement('p');
+                        p.innerHTML = tileset.desc;
+                        document.body.appendChild(p);
+                        var image = new Image();
+                        image.src = tileset.data;
+                        document.body.appendChild(image);
                     });
                 } else {
                     var p = document.createElement('p');
@@ -402,7 +401,10 @@
             image.onchange(event);
         };
 
-        onload = function() {dot.checked = true;twice.checked = true;};
+        onload = function() {
+            dot.checked = true;
+            twice.checked = true;
+        };
 
         function urlToImage(src, callback) {
             var image = new Image();
@@ -518,17 +520,107 @@
                 ctx.putImageData(imageData, (dx - sx) * tileSize, (dy - sy) * tileSize, sx * tileSize, sy * tileSize, tileSize, tileSize);
             }
 
-            function putImageData(dx, dy, sx, sy, sw, sh) {
+            function putRectangle(dx, dy, sx, sy, sw, sh) {
                 ctx.putImageData(imageData, (dx - sx) * tileSize, (dy - sy) * tileSize, sx * tileSize, sy * tileSize, tileSize * sw, tileSize * sh);
+            }
+
+            function putCircle(dx, dy, sx, sy) {
+                putHalfTile(dx + 0.5, dy + 0.5, sx + 2.5, sy + 0.5);
+                putHalfTile(dx + 1, dy + 0.5, sx + 2, sy + 0.5);
+                putHalfTile(dx + 0.5, dy + 1, sx + 2.5, sy + 0);
+                putHalfTile(dx + 1, dy + 1, sx + 2, sy + 0);
             }
 
             function putAutoTile(dx, dy, sx, sy) {
                 putFullTile(dx + 0, dy + 0, sx + 0, sy + 0);
                 putFullTile(dx + 1, dy + 0, sx + 2, sy + 0);
+                //角優先に選別、中央に装飾などがある場合失われる
+                //2000規格でも2x2にタイルを置いた時のために一応角同士がつながるようになっているため、角優先を採用
                 putFullTile(dx + 0, dy + 1, sx + 0, sy + 1);
                 putFullTile(dx + 1, dy + 1, sx + 2, sy + 1);
                 putFullTile(dx + 0, dy + 2, sx + 0, sy + 3);
                 putFullTile(dx + 1, dy + 2, sx + 2, sy + 3);
+                //中央優先に選別、角に装飾などがある場合失われる
+                /*putHalfTile(dx + 0, dy + 1, sx + 0, sy + 1);
+                putHalfTile(dx + 0.5, dy + 1, sx + 1.5, sy + 1);
+                putHalfTile(dx + 1, dy + 1, sx + 1, sy + 1);
+                putHalfTile(dx + 1.5, dy + 1, sx + 2.5, sy + 1);
+                putHalfTile(dx + 0, dy + 1.5, sx + 0, sy + 2.5);
+                putHalfTile(dx + 0.5, dy + 1.5, sx + 1.5, sy + 2.5);
+                putHalfTile(dx + 1, dy + 1.5, sx + 1, sy + 2.5);
+                putHalfTile(dx + 1.5, dy + 1.5, sx + 2.5, sy + 2.5);
+                putHalfTile(dx + 0, dy + 2, sx + 0, sy + 2);
+                putHalfTile(dx + 0.5, dy + 2, sx + 1.5, sy + 2);
+                putHalfTile(dx + 1, dy + 2, sx + 1, sy + 2);
+                putHalfTile(dx + 1.5, dy + 2, sx + 2.5, sy + 2);
+                putHalfTile(dx + 0, dy + 2.5, sx + 0, sy + 3.5);
+                putHalfTile(dx + 0.5, dy + 2.5, sx + 1.5, sy + 3.5);
+                putHalfTile(dx + 1, dy + 2.5, sx + 1, sy + 3.5);
+                putHalfTile(dx + 1.5, dy + 2.5, sx + 2.5, sy + 3.5);*/
+            }
+
+            function putAllAutoTile(dx, dy, sx, sy) {
+                putRectangle(dx + 0, dy + 0, sx + 0, sy + 0, 3, 4);
+                putHalfTile(dx + 1, dy + 0, sx + 0, sy + 1);
+                putHalfTile(dx + 1.5, dy + 0, sx + 2.5, sy + 1);
+                putHalfTile(dx + 1, dy + 0.5, sx + 0, sy + 3.5);
+                putHalfTile(dx + 1.5, dy + 0.5, sx + 2.5, sy + 3.5);
+                putFullTile(dx + 0, dy + 4, sx + 1, sy + 2);
+                putFullTile(dx + 1, dy + 4, sx + 1, sy + 2);
+                putFullTile(dx + 2, dy + 4, sx + 1, sy + 2);
+                putFullTile(dx + 0, dy + 5, sx + 1, sy + 2);
+                putFullTile(dx + 1, dy + 5, sx + 1, sy + 2);
+                putFullTile(dx + 2, dy + 5, sx + 1, sy + 2);
+                putHalfTile(dx + 0, dy + 4.5, sx + 2, sy + 0.5);
+                putHalfTile(dx + 0, dy + 5, sx + 2, sy + 0);
+                putHalfTile(dx + 0.5, dy + 4.5, sx + 2.5, sy + 0.5);
+                putHalfTile(dx + 0.5, dy + 5, sx + 2.5, sy + 0);
+                putHalfTile(dx + 1.5, dy + 4, sx + 2.5, sy + 0);
+                putHalfTile(dx + 1.5, dy + 4.5, sx + 2.5, sy + 0.5);
+                putHalfTile(dx + 2, dy + 4, sx + 2, sy + 0);
+                putHalfTile(dx + 2, dy + 4.5, sx + 2, sy + 0.5);
+                putHalfTile(dx + 1, dy + 5.5, sx + 2, sy + 0.5);
+                putHalfTile(dx + 1.5, dy + 5, sx + 2.5, sy + 0);
+                putHalfTile(dx + 2, dy + 5, sx + 2, sy + 0);
+                putHalfTile(dx + 2.5, dy + 5.5, sx + 2.5, sy + 0.5);
+                putFullTile(dx + 3, dy + 0, sx + 1, sy + 2);
+                putFullTile(dx + 4, dy + 0, sx + 1, sy + 2);
+                putFullTile(dx + 3, dy + 1, sx + 1, sy + 2);
+                putFullTile(dx + 4, dy + 1, sx + 1, sy + 2);
+                putCircle(dx + 3, dy + 0, sx, sy);
+                putFullTile(dx + 3, dy + 2, sx + 2, sy + 0);
+                putFullTile(dx + 4, dy + 2, sx + 2, sy + 0);
+                putFullTile(dx + 3, dy + 3, sx + 2, sy + 0);
+                putFullTile(dx + 4, dy + 3, sx + 2, sy + 0);
+                putHalfTile(dx + 3, dy + 2, sx + 1, sy + 2);
+                putHalfTile(dx + 4.5, dy + 2, sx + 1.5, sy + 2);
+                putHalfTile(dx + 3, dy + 3.5, sx + 1, sy + 2.5);
+                putHalfTile(dx + 4.5, dy + 3.5, sx + 1.5, sy + 2.5);
+                putFullTile(dx + 3, dy + 4, sx + 0, sy + 1);
+                putFullTile(dx + 4, dy + 4, sx + 2, sy + 1);
+                putFullTile(dx + 3, dy + 5, sx + 0, sy + 3);
+                putFullTile(dx + 4, dy + 5, sx + 2, sy + 3);
+                putCircle(dx + 3, dy + 4, sx, sy);
+                putRectangle(dx + 5, dy + 0, sx + 0, sy + 1, 0.5, 3);
+                putRectangle(dx + 5.5, dy + 0, sx + 2.5, sy + 1, 0.5, 3);
+                putFullTile(dx + 6, dy + 0, sx + 0, sy + 2);
+                putFullTile(dx + 6, dy + 1, sx + 0, sy + 2);
+                putFullTile(dx + 6, dy + 2, sx + 0, sy + 2);
+                putFullTile(dx + 7, dy + 0, sx + 2, sy + 2);
+                putFullTile(dx + 7, dy + 1, sx + 2, sy + 2);
+                putFullTile(dx + 7, dy + 2, sx + 2, sy + 2);
+                putCircle(dx + 6, dy + 0, sx, sy);
+                putCircle(dx + 6, dy + 1, sx, sy);
+                putRectangle(dx + 5, dy + 3, sx + 0, sy + 1, 3, 0.5);
+                putRectangle(dx + 5, dy + 3.5, sx + 0, sy + 3.5, 3, 0.5);
+                putFullTile(dx + 5, dy + 4, sx + 1, sy + 1);
+                putFullTile(dx + 6, dy + 4, sx + 1, sy + 1);
+                putFullTile(dx + 7, dy + 4, sx + 1, sy + 1);
+                putFullTile(dx + 5, dy + 5, sx + 1, sy + 3);
+                putFullTile(dx + 6, dy + 5, sx + 1, sy + 3);
+                putFullTile(dx + 7, dy + 5, sx + 1, sy + 3);
+                putCircle(dx + 5, dy + 4, sx, sy);
+                putCircle(dx + 6, dy + 4, sx, sy);
             }
 
             var canvas = document.createElement("canvas");
@@ -545,13 +637,13 @@
             dot3x(prevData, imageData);
 
             var tileSize = 16 * 3;
-            var tilesets = {};
+            var tilesets = [];
 
             // TileA1 水タイル
             canvas.width = 768;
             canvas.height = 576;
 
-            // TileA1 ブロックA(D) 海タイル
+            // TileA1 ブロックA(D) 海タイル Dは深海タイルとの接続が不自然
             var offset = 0;
             do {
                 for (var i = 0; i < 3; i++) {
@@ -595,7 +687,7 @@
                 putHalfTile(dx + 1.5, 5.5, sx + 0.5, 6.5);
             }
 
-            // TileA1 ブロックE 滝タイル
+            // TileA1 ブロックE 滝タイル 4コマ目が失われる
             for (var i = 0; i < 3; i++) {
                 for (var j = 14; j < 16; j++) {
                     for (var k = 0; k < 3; k++) {
@@ -604,9 +696,9 @@
                 }
             }
 
-            tilesets.tileA1 = canvas.toDataURL();
+            tilesets.push({ desc: 'A1 水タイル', data: canvas.toDataURL() });
 
-            // TileA2 ブロックAのみ オートタイル
+            // TileA2 ブロックAのみ オートタイル 親パターンが失われるため、一部オートタイル間の接続が不自然
             canvas.width = 768;
             canvas.height = 576;
 
@@ -623,30 +715,68 @@
             putAutoTile(4, 6, 6, 12);
             putAutoTile(6, 6, 9, 12);
 
-            tilesets.tileA2 = canvas.toDataURL();
+            tilesets.push({ desc: 'A2 オートタイル', data: canvas.toDataURL() });
 
             // TileA5 通常下層タイル
             canvas.width = 384;
             canvas.height = 768;
 
-            putImageData(0, 0, 12, 0, 6, 16);
-            putImageData(6, 0, 20, 0, 2, 8);
-            putImageData(6, 8, 22, 0, 2, 8);
+            putRectangle(0, 0, 12, 0, 6, 16);
+            putRectangle(6, 0, 18, 0, 2, 8);
+            putRectangle(6, 8, 20, 0, 2, 8);
 
-            tilesets.tileA5 = canvas.toDataURL();
+            tilesets.push({ desc: 'A5 下層タイル（通常）', data: canvas.toDataURL() });
 
-            // TileB 上層タイル（上層タイル＋通常下層タイルのあまり＋アニメーションのあまり）
+            // TileB 上層タイル＋通常下層タイルの残り
             canvas.width = 768;
             canvas.height = 768;
 
-            putImageData(0, 0, 18, 8, 6, 8);
-            putImageData(0, 8, 24, 0, 6, 8);
-            putImageData(8, 0, 24, 8, 6, 8);
-            putImageData(6, 0, 18, 0, 2, 8);
-            putImageData(6, 8, 3, 4, 2, 4);
-            putImageData(6, 12, 5, 4, 1, 4);
+            putRectangle(0, 0, 18, 8, 6, 8);
+            putRectangle(0, 8, 24, 0, 6, 8);
+            putRectangle(8, 0, 24, 8, 6, 8);
+            putRectangle(8, 8, 18, 0, 6, 8);
 
-            tilesets.tileB = canvas.toDataURL();
+            tilesets.push({ desc: 'B 上層タイル＋下層タイル（通常）の残り', data: canvas.toDataURL() });
+
+            // !$Animation アニメーション（4コマ目あり） キャラグラ 右回転でアニメーション
+            canvas.width = 48 * 3;
+            canvas.height = 48 * 4;
+
+            putRectangle(0, 0, 3, 4, 3, 2);
+            putRectangle(0, 2, 3, 7, 3, 1);
+            putRectangle(0, 3, 3, 6, 3, 1);
+
+            tilesets.push({ desc: '（おまけ） !$Animation アニメーション（4コマ目あり） キャラクター扱い 右回転でアニメーション', data: canvas.toDataURL() });
+            // おまけ オートタイル全パターン
+            canvas.width = 768;
+            canvas.height = 768;
+
+            putAllAutoTile(0, 0, 0, 8);
+            putAllAutoTile(0, 8, 3, 8);
+            putAllAutoTile(8, 0, 0, 12);
+            putAllAutoTile(8, 8, 3, 12);
+
+            tilesets.push({ desc: '（おまけ） TileC オートタイル全パターン', data: canvas.toDataURL() });
+
+            canvas.width = 768;
+            canvas.height = 768;
+
+            putAllAutoTile(0, 0, 6, 0);
+            putAllAutoTile(0, 8, 9, 0);
+            putAllAutoTile(8, 0, 6, 4);
+            putAllAutoTile(8, 8, 9, 4);
+
+            tilesets.push({ desc: '（おまけ） TileD オートタイル全パターン', data: canvas.toDataURL() });
+
+            canvas.width = 768;
+            canvas.height = 768;
+
+            putAllAutoTile(0, 0, 6, 8);
+            putAllAutoTile(0, 8, 9, 8);
+            putAllAutoTile(8, 0, 6, 12);
+            putAllAutoTile(8, 8, 9, 12);
+
+            tilesets.push({ desc: '（おまけ） TileE オートタイル全パターン', data: canvas.toDataURL() });
 
             return tilesets;
         }
