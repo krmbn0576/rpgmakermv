@@ -5,34 +5,60 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="main.css">
-    <title>2000→MVキャラ素材コンバーター</title>
+    <title>RPGツクール2000→MV素材変換器</title>
 </head>
 <body>
-    <h1>2000→MVキャラ素材コンバーター</h1>
-    <ul>
-        <li>RPGツクール2000のキャラチップを放り込むとRPGツクールMVのキャラチップになって出てきます。</li>
-        <li>画像の拡大方式は<strong>「そのまま拡大（ドット絵のまま）」と「きれいに拡大（普通絵っぽい）」</strong>から選べます。</li>
-        <li>拡大倍率は<strong>２倍or３倍</strong>から選べます。ＭＶのマップ上に表示するなら２倍、2000のマップを移植する場合は３倍がおすすめです。</li>
-        <li>何気に顔グラにも対応してますが、キャラと違いドット絵ではないのでやや出来栄えが悪いです。詳しくはこちらの<a href="http://qiita.com/krmbn0576/items/88321063a1edfb31a979">比較</a>をどうぞ。</li>
-        <li>xBR法のスクリプトは<a href="http://ohhiru.info/upscale/">ドット絵をアップスケールするやつ</a>よりお借りしました。ありがとうございます！</li>
-        <li>検索などから来た方は<a href="homepage.html">くらむぼんのホームページ</a>もぜひ寄ってください！MV用プラグインとか置いてます。</li>
-    </ul>
+    <p><a href="homepage.html">くらむぼんのホームページ</a>　←RPGツクールMV用のプラグインや音楽素材・ゲームを置いてます。</p>
+    <p><a href="http://ohhiru.info/upscale/">ドット絵をアップスケールするやつ</a>　←「なめらかに拡大」のスクリプト（xBR法）をお借りしました。ありがとうございます！</p>
+    <h1>RPGツクール2000→MV素材変換器</h1>
     <ol>
-        <li><strong>拡大方式</strong>および<strong>倍率</strong>を選んでチェックを入れる</li>
-        <li><strong>「画像を選択」</strong>で2000キャラチップ（or顔グラ）を放り込む（画面に直接ドラッグ＆ドロップしてもＯＫ）</li>
-        <li>下にMVのキャラチップになって表示されるので右クリックして<strong>「名前を付けて画像を保存」</strong></li>
-        <li>１～３を気が済むまで繰り返す（出力画像は一番下にどんどん追加されていきます）</li>
+        <li>下部の<strong>設定</strong>を調節（基本的にそのままでOK。「拡大方式」は好みで決めてください）</li>
+        <li><strong>「変換する画像を選択」</strong>を押してRPGツクール2000のキャラチップor顔グラフィックorマップチップを選択（直接ドラッグ＆ドロップしてもＯＫ）</li>
+        <li>一番下にRPGツクールMVの素材に変換された画像が表示されるので右クリックして<strong>「名前を付けて画像を保存」</strong></li>
+        <li>１～３を気が済むまで繰り返す（複数の画像を一気に変換することも可能。出力画像は一番下にどんどん追加されていきます）</li>
     </ol>
-    <strong>
-        <button type="button" id="dummy">画像を選択</button>
-        <input type="file" id="image" style="display: none;">
-        　　　拡大方式－
-        <label><input type="radio" name="upscale" id="dot">：そのまま拡大</label>
-        <label><input type="radio" name="upscale" id="xbr">：きれいに拡大</label>
-        　　　拡大倍率－
-        <label><input type="radio" name="scale" id="twice">：２倍</label>
-        <label><input type="radio" name="scale" id="three">：３倍</label>
-    </strong>
+    <p>※拡大方式別のサンプルを見たかったり、拡大倍率の使い分け方を知りたい場合は<a href="./?converter" target="_blank">変換器のサンプルと解説（RPGツクールMV製）</a>をご覧ください。</p>
+    <button type="button" id="dummy">変換する画像を選択</button>
+    <input type="file" id="image" style="display: none;" multiple>
+    <div class="options">
+        <div>
+            ・キャラチップ設定
+            <div class="item">
+                拡大方式<br>
+                <label><input type="radio" name="upscale" id="dot">：ドット絵のまま拡大</label><br>
+                <label><input type="radio" name="upscale" id="xbr" checked>：なめらかに拡大</label>
+            </div>
+            <div class="item">
+                拡大倍率<br>
+                <label><input type="radio" name="scale" id="even">：１倍</label><br>
+                <label><input type="radio" name="scale" id="twice" checked>：２倍（MVのキャラやマップの大きさに近いサイズ）</label><br>
+                <label><input type="radio" name="scale" id="three">：３倍（2000のマップ（３倍拡大）に近いサイズ）</label>
+            </div>
+        </div>
+        <hr>
+        <div>
+            ・顔グラフィック設定（拡大方式は「ブラウザ標準」、拡大倍率は「３倍」で固定。ぼやけ気味なのでwaifu2x-caffeなどでの拡大をおすすめします）
+        </div>
+        <hr>
+        <div>
+            ・マップチップ設定
+            <div class="item">
+                拡大方式<br>
+                ドット絵のまま拡大で固定
+            </div>
+            <div class="item">
+                拡大倍率<br>
+                <label><input type="radio" name="chipscale" id="chipeven">：１倍</label><br>
+                <label><input type="radio" name="chipscale" id="chiptwice">：２倍</label><br>
+                <label><input type="radio" name="chipscale" id="chipthree" checked>：３倍（推奨。MVのマップと同じサイズ）</label>
+            </div>
+            <div class="item">
+                おまけ<br>
+                <label><input type="checkbox" id="autotile">：オートタイル全パターンを出力</label><br>
+                <label><input type="checkbox" id="animation">：アニメーションタイルを出力</label>
+            </div>
+        </div>
+    </div>
     <div id="xBRscript" style="display: none;">
         //このタグ内のスクリプトは「ドット絵をアップスケールするやつ」よりお借りしました。ありがとうございます！
         (function () {
@@ -349,12 +375,61 @@
         try {
             var worker = new Worker(URL.createObjectURL(new Blob([xBRscript], { type: "text/javascript" })));
         } catch (err) {
-            //「IE + オフライン + きれいに拡大」の組み合わせはここでエラーです（揉み潰す）
+            //「IE + オフライン + なめらかに拡大」の組み合わせはここでエラーです（揉み潰す）
         }
-        var dot = document.getElementById("dot");
-        dot.checked = true;
-        var twice = document.getElementById("twice");
-        twice.checked = true;
+
+        var options = (function() {
+            var options = { charaMethod: 'xbr', charaSize: 2, chipSize: 3, autotile: false, animation: false };
+            var dot = document.getElementById("dot");
+            var xbr = document.getElementById("xbr");
+            var even = document.getElementById("even");
+            var twice = document.getElementById("twice");
+            var three = document.getElementById("three");
+            var chipeven = document.getElementById("chipeven");
+            var chiptwice = document.getElementById("chiptwice");
+            var chipthree = document.getElementById("chipthree");
+            var autotile = document.getElementById("autotile");
+            var animation = document.getElementById("animation");
+            dot.onchange = function() {
+                options.charaMethod = 'dot';
+            };
+            xbr.onchange = function() {
+                options.charaMethod = 'xbr';
+            };            
+            even.onchange = function() {
+                options.charaSize = 1;
+            };
+            twice.onchange = function() {
+                options.charaSize = 2;
+            };
+            three.onchange = function() {
+                options.charaSize = 3;
+            };
+            chipeven.onchange = function() {
+                options.chipSize = 1;
+            };
+            chiptwice.onchange = function() {
+                options.chipSize = 2;
+            };
+            chipthree.onchange = function() {
+                options.chipSize = 3;
+            };
+            autotile.onchange = function() {
+                options.autotile = autotile.checked;
+            };
+            animation.onchange = function() {
+                options.animation = animation.checked;
+            };
+            onload = function() {
+                xbr.checked = true;
+                twice.checked = true;
+                chipthree.checked = true;
+            };
+            return options;
+        })();
+
+        var running = false;
+        var queue = [];
         var image = document.getElementById("image");
 
         document.getElementById("dummy").onclick = function () {
@@ -362,32 +437,11 @@
         }
 
         image.onchange = function (event) {
-            urlToImage(URL.createObjectURL((event.dataTransfer || event.currentTarget).files[0]), function (image) {
-                if (image.width === 288 && image.height === 256) {
-                    convertCharset(image, function (result) {
-                        urlToImage(result, function (image) {
-                            document.body.appendChild(image);
-                        });
-                    });
-                } else if (image.width === 192 && image.height === 192) {
-                    urlToImage(convertFaceset(image), function (image) {
-                        document.body.appendChild(image);
-                    });
-                } else if (image.width === 480 && image.height === 256) {
-                    convertChipset(image).forEach(function(tileset) {
-                        var p = document.createElement('p');
-                        p.innerHTML = tileset.desc;
-                        document.body.appendChild(p);
-                        var image = new Image();
-                        image.src = tileset.data;
-                        document.body.appendChild(image);
-                    });
-                } else {
-                    var p = document.createElement('p');
-                    p.innerHTML = '画像のサイズが正しくありません。キャラチップは288*256pxのみ、顔グラは192*192pxのみ、マップチップは480*256pxのみ受け付けます。';
-                    document.body.appendChild(p);
-                }
-            });
+            queue = queue.concat(Array.prototype.slice.call((event.dataTransfer || event.currentTarget).files));
+            if (!running) {
+                running = true;
+                next();
+            }
             image.value = "";
         }
 
@@ -401,10 +455,42 @@
             image.onchange(event);
         };
 
-        onload = function() {
-            dot.checked = true;
-            twice.checked = true;
-        };
+        function next() {
+            if (queue.length === 0) {
+                running = false;
+                return;
+            }
+            urlToImage(URL.createObjectURL(queue.shift()), function (image) {
+                if (image.width === 288 && image.height === 256) {
+                    convertCharset(image, function (result) {
+                        urlToImage(result, function (image) {
+                            document.body.appendChild(image);
+                            next();
+                        });
+                    });
+                } else if (image.width === 192 && image.height === 192) {
+                    urlToImage(convertFaceset(image), function (image) {
+                        document.body.appendChild(image);
+                        next();
+                    });
+                } else if (image.width === 480 && image.height === 256) {
+                    convertChipset(image).forEach(function(tileset) {
+                        var p = document.createElement('p');
+                        p.innerHTML = tileset.desc;
+                        document.body.appendChild(p);
+                        var image = new Image();
+                        image.src = tileset.data;
+                        document.body.appendChild(image);
+                    });
+                    next();
+                } else {
+                    var p = document.createElement('p');
+                    p.innerHTML = '画像のサイズが正しくありません。キャラチップは288*256pxのみ、顔グラは192*192pxのみ、マップチップは480*256pxのみ受け付けます。';
+                    document.body.appendChild(p);
+                    next();
+                }
+            });
+        }
 
         function urlToImage(src, callback) {
             var image = new Image();
@@ -442,12 +528,17 @@
                 }
             }
 
+            if (options.charaSize === 1) {
+                callback(canvas.toDataURL());
+                return;
+            }
+
             var input = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            canvas.width *= twice.checked ? 2 : 3;
-            canvas.height *= twice.checked ? 2 : 3;
+            canvas.width *= options.charaSize;
+            canvas.height *= options.charaSize;
             var output = ctx.createImageData(canvas.width, canvas.height);
-            if (dot.checked) {
-                window[twice.checked ? 'dot2x' : 'dot3x'](input, output);
+            if (options.charaMethod === 'dot') {
+                window['dot' + options.charaSize + 'x'](input, output);
                 ctx.putImageData(output, 0, 0);
                 callback(canvas.toDataURL());
             } else {
@@ -455,7 +546,7 @@
                     ctx.putImageData(event.data, 0, 0);
                     callback(canvas.toDataURL());
                 }
-                worker.postMessage({ input: input, output: output, scale: twice.checked ? 2 : 3 }, [input.data.buffer, output.data.buffer]);
+                worker.postMessage({ input: input, output: output, scale: options.charaSize }, [input.data.buffer, output.data.buffer]);
             }
         }
 
@@ -633,15 +724,27 @@
 
             var prevData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             transparent(prevData, (18 + 8 * prevData.width) * 16 * 4);
-            var imageData = ctx.createImageData(canvas.width * 3, canvas.height * 3);
-            dot3x(prevData, imageData);
+            var imageData = ctx.createImageData(canvas.width * options.chipSize, canvas.height * options.chipSize);
+            switch (options.chipSize) {
+                case 1:
+                    imageData = prevData;
+                    break;
+                case 2:
+                    dot2x(prevData, imageData);
+                    break;
+                case 3:
+                    dot3x(prevData, imageData);
+                    break;
+                default:
+                    break;
+            }
 
-            var tileSize = 16 * 3;
+            var tileSize = 16 * options.chipSize;
             var tilesets = [];
 
             // TileA1 水タイル
-            canvas.width = 768;
-            canvas.height = 576;
+            canvas.width = 768 / 3 * options.chipSize;
+            canvas.height = 576 / 3 * options.chipSize;
 
             // TileA1 ブロックA(D) 海タイル Dは深海タイルとの接続が不自然
             var offset = 0;
@@ -699,8 +802,8 @@
             tilesets.push({ desc: 'A1 水タイル', data: canvas.toDataURL() });
 
             // TileA2 ブロックAのみ オートタイル 親パターンが失われるため、一部オートタイル間の接続が不自然
-            canvas.width = 768;
-            canvas.height = 576;
+            canvas.width = 768 / 3 * options.chipSize;
+            canvas.height = 576 / 3 * options.chipSize;
 
             putAutoTile(0, 0, 0, 8);
             putAutoTile(2, 0, 3, 8);
@@ -714,12 +817,13 @@
             putAutoTile(2, 6, 9, 8);
             putAutoTile(4, 6, 6, 12);
             putAutoTile(6, 6, 9, 12);
+            ctx.fillRect(8 * tileSize, 0 * tileSize, 8 * tileSize, 12 * tileSize);
 
             tilesets.push({ desc: 'A2 オートタイル', data: canvas.toDataURL() });
 
             // TileA5 通常下層タイル
-            canvas.width = 384;
-            canvas.height = 768;
+            canvas.width = 384 / 3 * options.chipSize;
+            canvas.height = 768 / 3 * options.chipSize;
 
             putRectangle(0, 0, 12, 0, 6, 16);
             putRectangle(6, 0, 18, 0, 2, 8);
@@ -728,8 +832,8 @@
             tilesets.push({ desc: 'A5 下層タイル（通常）', data: canvas.toDataURL() });
 
             // TileB 上層タイル＋通常下層タイルの残り
-            canvas.width = 768;
-            canvas.height = 768;
+            canvas.width = 768 / 3 * options.chipSize;
+            canvas.height = 768 / 3 * options.chipSize;
 
             putRectangle(0, 0, 18, 8, 6, 8);
             putRectangle(0, 8, 24, 0, 6, 8);
@@ -738,45 +842,50 @@
 
             tilesets.push({ desc: 'B 上層タイル＋下層タイル（通常）の残り', data: canvas.toDataURL() });
 
-            // !$Animation アニメーション（4コマ目あり） キャラグラ 右回転でアニメーション
-            canvas.width = 48 * 3;
-            canvas.height = 48 * 4;
-
-            putRectangle(0, 0, 3, 4, 3, 2);
-            putRectangle(0, 2, 3, 7, 3, 1);
-            putRectangle(0, 3, 3, 6, 3, 1);
-
-            tilesets.push({ desc: '（おまけ） !$Animation アニメーション（4コマ目あり） キャラクター扱い 右回転でアニメーション', data: canvas.toDataURL() });
+            if (options.autotile) {
             // おまけ オートタイル全パターン
-            canvas.width = 768;
-            canvas.height = 768;
+                canvas.width = 768 / 3 * options.chipSize;
+                canvas.height = 768 / 3 * options.chipSize;
 
-            putAllAutoTile(0, 0, 0, 8);
-            putAllAutoTile(0, 8, 3, 8);
-            putAllAutoTile(8, 0, 0, 12);
-            putAllAutoTile(8, 8, 3, 12);
+                putAllAutoTile(0, 0, 0, 8);
+                putAllAutoTile(0, 8, 3, 8);
+                putAllAutoTile(8, 0, 0, 12);
+                putAllAutoTile(8, 8, 3, 12);
 
-            tilesets.push({ desc: '（おまけ） TileC オートタイル全パターン', data: canvas.toDataURL() });
+                tilesets.push({ desc: '（おまけ） C オートタイル全パターン', data: canvas.toDataURL() });
 
-            canvas.width = 768;
-            canvas.height = 768;
+                canvas.width = 768 / 3 * options.chipSize;
+                canvas.height = 768 / 3 * options.chipSize;
 
-            putAllAutoTile(0, 0, 6, 0);
-            putAllAutoTile(0, 8, 9, 0);
-            putAllAutoTile(8, 0, 6, 4);
-            putAllAutoTile(8, 8, 9, 4);
+                putAllAutoTile(0, 0, 6, 0);
+                putAllAutoTile(0, 8, 9, 0);
+                putAllAutoTile(8, 0, 6, 4);
+                putAllAutoTile(8, 8, 9, 4);
 
-            tilesets.push({ desc: '（おまけ） TileD オートタイル全パターン', data: canvas.toDataURL() });
+                tilesets.push({ desc: '（おまけ） D オートタイル全パターン', data: canvas.toDataURL() });
 
-            canvas.width = 768;
-            canvas.height = 768;
+                canvas.width = 768 / 3 * options.chipSize;
+                canvas.height = 768 / 3 * options.chipSize;
 
-            putAllAutoTile(0, 0, 6, 8);
-            putAllAutoTile(0, 8, 9, 8);
-            putAllAutoTile(8, 0, 6, 12);
-            putAllAutoTile(8, 8, 9, 12);
+                putAllAutoTile(0, 0, 6, 8);
+                putAllAutoTile(0, 8, 9, 8);
+                putAllAutoTile(8, 0, 6, 12);
+                putAllAutoTile(8, 8, 9, 12);
 
-            tilesets.push({ desc: '（おまけ） TileE オートタイル全パターン', data: canvas.toDataURL() });
+                tilesets.push({ desc: '（おまけ） E オートタイル全パターン', data: canvas.toDataURL() });
+            }
+
+            if (options.animation) {
+                // !$Animation アニメーション（4コマ目あり） キャラグラ 右回転でアニメーション
+                canvas.width = tileSize * 3;
+                canvas.height = tileSize * 4;
+
+                putRectangle(0, 0, 3, 4, 3, 2);
+                putRectangle(0, 2, 3, 7, 3, 1);
+                putRectangle(0, 3, 3, 6, 3, 1);
+
+                tilesets.push({ desc: '（おまけ） アニメーション（4コマ目あり） ファイル名先頭に!$をつけてキャラクターフォルダへ　右回転でアニメーション', data: canvas.toDataURL() });
+            }
 
             return tilesets;
         }

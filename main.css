@@ -8,3 +8,19 @@ body {
 h1, h2, strong {
 	color: #333;
 }
+
+img {
+	border: 2px solid black;
+}
+
+.options {
+	background-color: #eee;
+	margin: 1em;
+}
+
+.item {
+	display: inline-block;
+	border: 1px solid black;
+	vertical-align: middle;
+	margin: 1em;
+}

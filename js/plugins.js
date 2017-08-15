@@ -3,10 +3,10 @@
 var $plugins =
 [
 {"name":"SimpleShortcut","status":true,"description":"ログ、スイッチ、変数のショートカットを定義します。","parameters":{}},
-{"name":"DevToolsManage","status":true,"description":"デベロッパツール管理プラグイン","parameters":{"開始時に起動":"ON","常に前面表示":"OFF","デベロッパツール表示位置":"0,0,800,600","最小化切替キー":"F8","リロードキー":"F12","画面の左寄せキー":"","高速化切替キー":"","強制戦闘勝利キー":"","スクリプト実行キー":"","フリーズキー":"","FPS表示":"OFF","タイトルカット":"OFF","高速開始":"OFF","高速スピード":"2","モバイル偽装":"OFF","メニューバー表示":"ON","クリックメニュー":"2"}},
+{"name":"DevToolsManage","status":true,"description":"デベロッパツール管理プラグイン","parameters":{"開始時に起動":"ON","常に前面表示":"OFF","デベロッパツール表示位置":"0,0,800,600","最小化切替キー":"F8","リロードキー":"F12","画面の左寄せキー":"","高速化切替キー":"","強制戦闘勝利キー":"","スクリプト実行キー":"","フリーズキー":"","FPS表示":"OFF","タイトルカット":"OFF","高速開始":"OFF","高速スピード":"2","モバイル偽装":"OFF","メニューバー表示":"ON","クリックメニュー":"-1"}},
 {"name":"111_InputForm","status":true,"description":"フォーム作って文字入力","parameters":{}},
 {"name":"DTextPicture","status":true,"description":"動的文字列ピクチャ生成プラグイン","parameters":{}},
-{"name":"TMNamePop","status":true,"description":"イベントの頭上に文字列を表示する機能を追加します。","parameters":{"backOpacity":"96","fontSize":"20","fontOutlineWidth":"4","fontOutlineColor":"rgba(0, 0, 0, 0.5)","width":"160","useRoundRect":"0","roundRectRadius":"6"}},
+{"name":"TMNamePop","status":true,"description":"イベントの頭上に文字列を表示する機能を追加します。","parameters":{"backOpacity":"96","fontSize":"20","fontOutlineWidth":"4","fontOutlineColor":"rgba(0, 0, 0, 0.5)","width":"240","useRoundRect":"0","roundRectRadius":"6"}},
 {"name":"QuickMove","status":true,"description":"歩行とジャンプを軽快に(2000風に)します。","parameters":{}},
 {"name":"OnlineAvatar","status":true,"description":"Firebaseを使ってプレイヤーをオンライン同期します。","parameters":{"apiKey":"AIzaSyAbDEqyhj4YAhsv0Z05UVgo8wqc-7-_7mo","authDomain":"mosimo-online.firebaseapp.com","databaseURL":"https://mosimo-online.firebaseio.com","avatarEvent":"1","syncSwitchStart":"11","syncSwitchEnd":"20","syncVariableStart":"11","syncVariableEnd":"20"}},
 {"name":"DataCacheBlocker","status":true,"description":"キャッシュを阻止します。（dataフォルダのみ）","parameters":{}},
