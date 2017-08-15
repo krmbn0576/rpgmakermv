@@ -489,14 +489,24 @@
                     document.body.appendChild(p);
                     next();
                 }
+            }, function() {
+                var p = document.createElement('p');
+                p.innerHTML = 'これは画像ファイルではありません。';
+                document.body.appendChild(p);
+                next();
             });
         }
 
-        function urlToImage(src, callback) {
+        function urlToImage(src, callback, errorback) {
             var image = new Image();
             image.onload = function () {
                 callback(image);
             };
+            if (errorback) {
+                image.onerror = function () {
+                    errorback();
+                };
+            }
             image.src = src;
         }
 
