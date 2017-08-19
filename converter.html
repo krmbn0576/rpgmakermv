@@ -852,8 +852,8 @@
 
             tilesets.push({ desc: 'B 上層タイル＋下層タイル（通常）の残り', data: canvas.toDataURL() });
 
-            if (options.autotile) {
             // おまけ オートタイル全パターン
+            if (options.autotile) {
                 canvas.width = 768 / 3 * options.chipSize;
                 canvas.height = 768 / 3 * options.chipSize;
 
@@ -885,8 +885,8 @@
                 tilesets.push({ desc: '（おまけ） E オートタイル全パターン', data: canvas.toDataURL() });
             }
 
+            // !$Animation アニメーション（4コマ目あり） キャラグラ 右回転でアニメーション
             if (options.animation) {
-                // !$Animation アニメーション（4コマ目あり） キャラグラ 右回転でアニメーション
                 canvas.width = tileSize * 3;
                 canvas.height = tileSize * 4;
 
