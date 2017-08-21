@@ -1,6 +1,8 @@
 //=============================================================================
 // QuickMove.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2017/08/21 ver1.5.0以降で顔グラ左右反転時にエラーが出る問題を修正しました
 //=============================================================================
 
 /*:
@@ -87,7 +89,7 @@
 		}
 	};
 
-	Window_Base.prototype.drawFaceReverse = function(faceName, faceIndex, x, y, width, height) {
+	Window_Base.prototype.drawFace = function(faceName, faceIndex, x, y, width, height) {
 		width = width || Window_Base._faceWidth;
 		height = height || Window_Base._faceHeight;
 		var bitmap = ImageManager.loadFace(faceName);
@@ -99,17 +101,13 @@
 		var dy = Math.floor(y + Math.max(height - ph, 0) / 2);
 		var sx = faceIndex % 4 * pw + (pw - sw) / 2;
 		var sy = Math.floor(faceIndex / 4) * ph + (ph - sh) / 2;
-		this.contents.bltReverse(bitmap, sx, sy, sw, sh, dx, dy);
-	};
-
-	Window_Message.prototype.drawMessageFace = function() {
-		(this._faceReverse ? this.drawFaceReverse : this.drawFace).call(this, $gameMessage.faceName(), $gameMessage.faceIndex(), 0, 0);
+		this.contents[this._faceReverse ? 'bltReverse' : 'blt'](bitmap, sx, sy, sw, sh, dx, dy);
 	};
 
 	//[\R]が文章中にある時、顔を左右反転
 	var _Window_Message_processEscapeCharacter = Window_Message.prototype.processEscapeCharacter;
 	Window_Message.prototype.processEscapeCharacter = function(code, textState) {
-		if (code === 'R') this._faceBitmap = true, this._faceReverse = !this._faceReverse;
+		if (code === 'R') this.loadMessageFace(), this._faceReverse = !this._faceReverse;
 		else _Window_Message_processEscapeCharacter.apply(this, arguments);
 	};
 })();
