@@ -2,7 +2,7 @@
 // InputForm.js
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
-// 2017/09/03 iOS Safariで「決定」ボタンを押せないバグを修正
+// 2017/09/03 iOSで「決定」ボタンを押せないバグを修正＆裏のゲーム画面のクリックを無効に
 //=============================================================================
 
 /*:
@@ -38,6 +38,10 @@
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
 */
 (function() {
+    function stopPropagation(event) {
+        event.stopPropagation();
+    }
+
     // css追加
     (function(){
         var css = document.createElement('link');
@@ -168,11 +172,11 @@
                     e.stopPropagation();
                 }
             });
+            gui.input.addEventListener("mousedown", stopPropagation); // 裏のゲーム画面のクリック暴発を防ぐ
+            gui.input.addEventListener("touchstart", stopPropagation); // iOSでclickイベント取れない対策
+            gui.submit.addEventListener("mousedown", stopPropagation); // 裏のゲーム画面のクリック暴発を防ぐ
+            gui.submit.addEventListener("touchstart", stopPropagation); // iOSでclickイベント取れない対策
             gui.submit.addEventListener("click" ,function(){ // 送信ボタンクリック
-                gui.success();
-                return false;
-            });
-            gui.submit.addEventListener("touchstart" ,function(){ // iOS Safariでclickイベント取れない対策
                 gui.success();
                 return false;
             });
