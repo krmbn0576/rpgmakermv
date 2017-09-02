@@ -1,5 +1,8 @@
 //=============================================================================
-// InputFrom.js
+// InputForm.js
+// PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2017/09/03 iOS Safariで「決定」ボタンを押せないバグを修正
 //=============================================================================
 
 /*:
@@ -166,6 +169,10 @@
                 }
             });
             gui.submit.addEventListener("click" ,function(){ // 送信ボタンクリック
+                gui.success();
+                return false;
+            });
+            gui.submit.addEventListener("touchstart" ,function(){ // iOS Safariでclickイベント取れない対策
                 gui.success();
                 return false;
             });
