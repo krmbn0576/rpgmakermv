@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_core.js v1.5.0
+// rpg_core.js v1.5.1
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ Utils.RPGMAKER_NAME = 'MV';
  * @type String
  * @final
  */
-Utils.RPGMAKER_VERSION = "1.5.0";
+Utils.RPGMAKER_VERSION = "1.5.1";
 
 /**
  * Checks whether the option is in the query string.
@@ -4387,7 +4387,7 @@ Sprite.prototype._renderWebGL = function(renderer) {
         //copy of pixi-v4 internal code
         this.calculateVertices();
 
-        if (this._isPicture) {
+        if (this.pluginName === 'sprite' && this._isPicture) {
             // use heavy renderer, which reduces artifacts and applies corrent blendMode,
             // but does not use multitexture optimization
             this._speedUpCustomBlendModes(renderer);
@@ -4395,8 +4395,8 @@ Sprite.prototype._renderWebGL = function(renderer) {
             renderer.plugins.picture.render(this);
         } else {
             // use pixi super-speed renderer
-            renderer.setObjectRenderer(renderer.plugins.sprite);
-            renderer.plugins.sprite.render(this);
+            renderer.setObjectRenderer(renderer.plugins[this.pluginName]);
+			renderer.plugins[this.pluginName].render(this);
         }
     }
 };
@@ -5481,14 +5481,14 @@ Tilemap.WATERFALL_AUTOTILE_TABLE = [
 function ShaderTilemap() {
     Tilemap.apply(this, arguments);
     this.roundPixels = true;
-};
+}
 
 ShaderTilemap.prototype = Object.create(Tilemap.prototype);
 ShaderTilemap.prototype.constructor = ShaderTilemap;
 
 // we need this constant for some platforms (Samsung S4, S5, Tab4, HTC One H8)
 PIXI.glCore.VertexArrayObject.FORCE_NATIVE = true;
-PIXI.GC_MODES.DEFAULT = PIXI.GC_MODES.AUTO;
+PIXI.settings.GC_MODE = PIXI.GC_MODES.AUTO;
 PIXI.tilemap.TileRenderer.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 PIXI.tilemap.TileRenderer.DO_CLEAR = true;
 
