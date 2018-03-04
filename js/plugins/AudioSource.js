@@ -80,9 +80,11 @@
  * 設置されたラジオから曲が流れている演出などにお使いください。
  * 
  * また、BGS並行演奏プラグインと連携する場合は、
+ * BGSライン変更→audiosourceの順番で指定すれば
+ * それぞれのBGSに音源を指定できます。
+ * 例
  * ◆プラグインコマンド：PB_BGSライン変更 2
  * ◆プラグインコマンド：audiosource bgs 1
- * という順番で指定すればそれぞれのBGSに音源を指定できます。
  * 
  * audiosource bgm reset
  * audiosource bgs reset
