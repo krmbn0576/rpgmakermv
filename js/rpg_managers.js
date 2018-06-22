@@ -1,5 +1,5 @@
 //=============================================================================
-// rpg_managers.js v1.5.2
+// rpg_managers.js v1.6.1
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -882,7 +882,7 @@ ImageManager.loadNormalBitmap = function(path, hue) {
     var key = this._generateCacheKey(path, hue);
     var bitmap = this._imageCache.get(key);
     if (!bitmap) {
-        bitmap = Bitmap.load(path);
+        bitmap = Bitmap.load(decodeURIComponent(path));
         bitmap.addLoadListener(function() {
             bitmap.rotateHue(hue);
         });
