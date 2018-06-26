@@ -10,6 +10,7 @@
 // 2017/03/25 プラグインパラメータに0を指定できないバグを修正しました
 // 2017/06/04 BGMとBGSの再生コマンドを連打するとノイズが発生する不具合と、オプション音量を変更した瞬間音量調節が無効になるバグを修正しました
 // 2017/10/05 FootstepSound.jsとの連携
+// 2018/06/27 panが0と0以外の値をまたぐ時、ノイズが入る（環境がある）バグを対策
 //=============================================================================
 
 /*:
@@ -294,7 +295,7 @@
 		var dy = $gameMap.deltaY(source._realY, listenerY);
 		var d = Math.sqrt(dx * dx + dy * dy);
 		if (d > 1) audio.volume *= Math.pow(decay / 100, d - 1);
-		audio.pan = (dx * pan).clamp(-100, 100);
+		audio.pan = (dx * pan).clamp(-100, 100) || Number.MIN_VALUE;
 	}
 
 	//連携用の口
