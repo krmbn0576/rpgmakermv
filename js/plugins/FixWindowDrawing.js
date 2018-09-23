@@ -1,6 +1,8 @@
 //=============================================================================
 // FixWindowDrawing.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2018/09/23 このプラグインを使っている時だけメッセージウィンドウに前の内容が残存するバグを修正
 //=============================================================================
 
 /*:
@@ -21,6 +23,7 @@
     Bitmap.prototype.checkDirty = function() {
         if (this._dirty) {
             var baseTexture = this._baseTexture;
+            baseTexture.update();
             setTimeout(function() {
                 baseTexture.update();
             }, 0);
