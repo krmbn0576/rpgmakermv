@@ -22,12 +22,13 @@
     'use strict';
     Bitmap.prototype.checkDirty = function() {
         if (this._dirty) {
-            var baseTexture = this._baseTexture;
-            setTimeout(function() {
-                baseTexture.update();
-            }, 0);
-            this._dirty = false;
+            setTimeout(this.clearDirty.bind(this), 0);
         }
+    };
+
+    Bitmap.prototype.clearDirty = function() {
+        this._baseTexture.update();
+        this._dirty = false;
     };
     
     var _Window_Message_terminateMessage =
