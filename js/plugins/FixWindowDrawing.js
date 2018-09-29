@@ -23,11 +23,17 @@
     Bitmap.prototype.checkDirty = function() {
         if (this._dirty) {
             var baseTexture = this._baseTexture;
-            baseTexture.update();
             setTimeout(function() {
                 baseTexture.update();
             }, 0);
             this._dirty = false;
         }
+    };
+    
+    var _Window_Message_terminateMessage =
+        Window_Message.prototype.terminateMessage;
+    Window_Message.prototype.terminateMessage = function() {
+        _Window_Message_terminateMessage.call(this);
+        this.contents.clear();
     };
 })();
