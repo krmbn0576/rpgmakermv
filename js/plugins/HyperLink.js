@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // 2016/12/04 リンクの背景を丸く白で塗りました
 // 2017/02/01 ローカル実行時、標準ブラウザからリンクを開くようにしました
+// 2018/10/12 RPGアツマールでのリンク表示に対応
 //=============================================================================
 
 /*:
@@ -24,6 +25,12 @@
  * link off
  * 　表示しているリンクを消します。
  * 
+ * RPGアツマールでの動作：
+ * このプラグインは、RPGアツマール上での利用にも対応しています。
+ * ただし、アツマール上ではアツマール側が用意したウィンドウ上にリンクが表示されます。
+ * また、デザインが少し違う関係でlink onの「タイトル」指定が無視されるようになり、
+ * link offは動作しなくなり、代わりにウィンドウを閉じることでリンクを消せるようになります。
+ * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
  */
@@ -38,7 +45,9 @@
 	}
 
 	Graphics.printLink = function(url, title) {
-		if (this._errorPrinter) {
+		if (window.RPGAtsumaru && window.RPGAtsumaru.popups && window.RPGAtsumaru.popups.openLink) {
+			window.RPGAtsumaru.popups.openLink(url);
+		} else if (this._errorPrinter) {
 			var link = '<a href="' + url + '" target="_blank" id="HyperLink" style="background-color: #eee;border-radius: 1em;">' + title + '</a>';
 			this._errorPrinter.innerHTML = this._makeErrorHtml(description, link);
 			var a = document.getElementById('HyperLink');
