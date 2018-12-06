@@ -2,33 +2,34 @@
 #_111_input{
     position: absolute; /* */
 	z-index:999; /* */
-	font-size: 24px; /* ←この数字は文字の大きさを表しています */
+	/* テキストフォームの文字の大きさはプラグインコマンドで指定します */
 	width : 15em; /* ←この数字はウインドウの幅を表しています */
 	height : 1.5em; /* ←この数字はウインドウの高さを表しています */
 
 	font-weight:bold; 
     color: #f8f8f8;
-    text-shadow: black 1px 1px 0px, black -1px 1px 0px,
-                 black 1px -1px 0px, black -1px -1px 0px;
+    text-shadow: black 0.04em 0.04em 0em, black -0.04em 0.04em 0em,
+                 black 0.04em -0.04em 0em, black -0.04em -0.04em 0em;
     font-family: GameFont;
 
-    border:solid 3px #f8f8f8;
-    border-radius:5px;
+    border:solid 0.125em #f8f8f8;
+    border-radius: 0.2em;
+    padding: 0.04em 0em;
     background: rgba(0,0,0, 0.5);
 }
 /* ここからは、決定ボタンのデザインに関する設定です。 */
 #_111_submit{
 	position: absolute; /* */
 	z-index:999; /* */
-	font-size: 24px; /* ←この数字は文字の大きさを表しています */
 
 	font-weight:bold; 
     color: #f8f8f8;
-    text-shadow: black 1px 1px 0px, black -1px 1px 0px,
-                 black 1px -1px 0px, black -1px -1px 0px;
+    text-shadow: black 0.04em 0.04em 0em, black -0.04em 0.04em 0em,
+                 black 0.04em -0.04em 0em, black -0.04em -0.04em 0em;
     font-family: GameFont;
 
-    border:solid 3px #f8f8f8;
-    border-radius:5px;
+    border:solid 0.125em #f8f8f8;
+    border-radius: 0.2em;
+    padding: 0.04em 0.25em;
     background: rgba(0,0,0, 0.5);
 }
