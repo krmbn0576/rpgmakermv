@@ -2,6 +2,8 @@
 // BiimSystem.js
 // MIT License (C) 2018 くらむぼん
 // http://opensource.org/licenses/mit-license.php
+// ----------------------------------------------------------------------------
+// 2019/01/05 アツマールのスクショにbiim枠部分が映らない問題を修正
 //=============================================================================
 
 /*:
@@ -65,11 +67,12 @@
  * 
  * 
  * 備考：
+ * ・biim枠をONにすると、画面が狭くなる都合上メニューなどのUIが少し調節されます。
+ *   また、左上のゲーム画面は13マスx9マスに縮められます。（縦横4マスずつ減少）
  * ・ピクチャは1~50番がbiim枠より下に、51~100番が枠より上に表示されます。
  * ・「biim枠」パラメータをOFFにすると、枠無し（画面サイズの変更もなし）で
  * 　タイマーなどの機能だけを利用することができます。
  * ・タイマーの位置は「タイマーX座標」「タイマーY座標」パラメータで調節できます。
- * ・biim枠をONにすると、画面が狭くなる都合上メニューなどのUIが少し調節されます。
  * ・タイムランキングはアツマールのスコアボード機能を利用していますが、
  *   スコアボードに登録するためタイム(秒)を-60倍にしたポイントに変換して登録しています。
  *   そのため、アツマールのAPI設定画面などではポイントの値で表示されることにご注意ください。
@@ -169,6 +172,20 @@
                     height = h;
                     this._captureBitmap = result;
                 }});
+            }
+
+            //アツマールのスクショにBiim枠を写す
+            if (window.RPGAtsumaru && window.RPGAtsumaru.experimental && window.RPGAtsumaru.experimental.screenshot && window.RPGAtsumaru.experimental.screenshot.setScreenshotHandler) {
+                window.RPGAtsumaru.experimental.screenshot.setScreenshotHandler(function() {
+                    var w = width;
+                    var h = height;
+                    width = SceneManager._screenWidth;
+                    height = SceneManager._screenHeight;
+                    var result = Bitmap.snap(root).canvas.toDataURL('image/jpeg', 0.5);
+                    width = w;
+                    height = h;
+                    return result;
+                });
             }
 
             //(15, 11, 1152, 648)
