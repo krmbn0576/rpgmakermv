@@ -1,12 +1,13 @@
 //=============================================================================
 // TimeEvent.js
-// MIT License (C) 2017 くらむぼん
+// MIT License (C) 2017-2019 くらむぼん
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // 2017/05/01 ロード後にゲームが再開できない場合があるバグを修正
 // 2017/05/26 対象となるスイッチと変数の番号の表記に\S[x],\V[x]方式を追加
 // 2017/05/27 xxxeveryシリーズとeverystopを追加、引数に分と%を許可
 // 2017/05/28 if条件２つを順不同に
+// 2019/03/27 サーバーの現在時刻を取得するプラグインがONの時はサーバー時刻を使う
 //=============================================================================
 
 /*:
@@ -19,6 +20,8 @@
  * その後経過した時間に応じてイベントが発生します。
  * この時間はセーブしてゲームを終了した後も経過していき、
  * ロード後に時間を越えていた場合はロード直後にイベントが発生します。
+ * ※サーバーの現在時刻を取得するプラグイン(ServerTime.js)が
+ * 　ONの時は、サーバー時刻を使うようになりました。
  * 
  * 
  * プラグインコマンド：
@@ -147,13 +150,13 @@
 				break;
 		}
 		if (isEvery(timeEvent)) timeEvent.plusMinutes = timeEvent.minutes;
-		timeEvent.time = Date.now();
+		timeEvent.time = window.getServerTime ? window.getServerTime() : Date.now();
 		this._timeEvents.push(timeEvent);
 	};
 
 	Game_System.prototype.executeTimeEvents = function() {
 		if (this._timeEvents) this._timeEvents.forEach(function(timeEvent, index, timeEvents) {
-			if (!(timeEvent && timeEvent.time + timeEvent.minutes * 60 * 1000 < Date.now())) return;
+			if (!(timeEvent && timeEvent.time + timeEvent.minutes * 60 * 1000 < (window.getServerTime ? window.getServerTime() : Date.now()))) return;
 			var target = removeEscape(timeEvent.target);
 			if (canHappen(timeEvent)) switch (isEvery(timeEvent) ? timeEvent.command.slice(0, -5) : timeEvent.command) {
 				case 'on':
