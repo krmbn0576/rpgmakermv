@@ -1,6 +1,8 @@
 //=============================================================================
 // SymbolReplacer.js
 // PUBLIC DOMAIN
+// ----------------------------------------------------------------------------
+// 2019/03/29 v1.6.0以降で動作しない不具合を修正しました
 //=============================================================================
 
 /*:
@@ -52,12 +54,7 @@
 		var fs = require('fs');
 		action(imgPath + 'characters/');
 		action(imgPath + 'parallaxes/');
-		var w = require('nw.gui').Window.get();
-		if (!w.isDevToolsOpen()) {
-			var d = w.showDevTools();
-			d.moveTo(0, 0);
-			w.focus();
-		}
+		require('nw.gui').Window.get().showDevTools();
 		if (name === 'convert') console.log('変換成功： ! -> ' + exc + ' , $ -> ' + dol);
 		else console.log('復元成功： ' + exc + ' -> ! , ' + dol + ' -> $');
 	}
