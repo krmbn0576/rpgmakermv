@@ -2,7 +2,8 @@
 // LoopTagChecker.js
 // PUBLIC DOMAIN
 // ----------------------------------------------------------------------------
-// 2016/11/2 チェックするフォルダと表示情報を指定できるようにしました
+// 2016/11/02 チェックするフォルダと表示情報を指定できるようにしました
+// 2019/03/29 v1.6.0以降で動作しない不具合を修正しました
 //=============================================================================
 
 /*:
@@ -45,12 +46,7 @@
 		if (this._afterReadLoopComments) this._afterReadLoopComments();
 	};
 
-	var w = require('nw.gui').Window.get();
-	if (!w.isDevToolsOpen()) {
-		var d = w.showDevTools();
-		d.moveTo(0, 0);
-		w.focus();
-	}
+	require('nw.gui').Window.get().showDevTools();
 
 	var path = require('path').dirname(process.mainModule.filename) + '/audio/';
 	var fs = require('fs');
