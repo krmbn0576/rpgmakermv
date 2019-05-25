@@ -192,7 +192,7 @@ if (window.ResourceHandler) {
     ) {
         let retry;
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, { credentials: 'same-origin' });
             if (response.ok) {
                 switch (method) {
                     case 'stream':
@@ -246,7 +246,7 @@ if (window.ResourceHandler) {
 } else {
     window.ResourceHandler = {
         async fetchWithRetry(url) {
-            const response = await fetch(url);
+            const response = await fetch(url, { credentials: 'same-origin' });
             if (response.ok) {
                 return response.body.getReader();
             } else {
