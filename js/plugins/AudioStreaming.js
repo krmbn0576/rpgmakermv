@@ -4,6 +4,7 @@
 // http://opensource.org/licenses/mit-license.php
 // ----------------------------------------------------------------------------
 // 2019/06/02 ループタグの指定範囲が全長を超えた場合のループ処理を修正
+// 2019/06/02 デコード結果がない場合にエラーになるのを修正
 //=============================================================================
 
 /*:
@@ -347,13 +348,15 @@ WebAudio.prototype._onDecode = function(result) {
         }
         return;
     }
-    const channels = result.data.length;
+    if (result.data[0].length === 0) {
+        return;
+    }
     const buffer = WebAudio._context.createBuffer(
         result.data.length,
         result.data[0].length,
         result.sampleRate
     );
-    for (let i = 0; i < channels; i++) {
+    for (let i = 0; i < result.data.length; i++) {
         if (buffer.copyToChannel) {
             buffer.copyToChannel(result.data[i], i);
         } else {
