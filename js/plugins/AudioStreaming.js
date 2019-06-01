@@ -2,6 +2,8 @@
 // AudioStreaming.js
 // MIT License (C) 2019 くらむぼん
 // http://opensource.org/licenses/mit-license.php
+// ----------------------------------------------------------------------------
+// 2019/06/02 ループタグの指定範囲が全長を超えた場合のループ処理を修正
 //=============================================================================
 
 /*:
@@ -328,14 +330,20 @@ WebAudio.prototype._onDecode = function(result) {
     }
     if (result.eof) {
         this._totalTime = this._loadedTime;
-        if (this._totalTime <= this.seek()) {
-            this.stop();
-        }
         if (this._loopLength === 0) {
+            this._loopStart = 0;
             this._loopLength = this._totalTime;
             if (this._loop) {
                 this._createSourceNodes();
             }
+        } else if (this._totalTime < this._loopStart + this._loopLength) {
+            this._loopLength = this._totalTime - this._loopStart;
+            if (this._loop) {
+                this._createSourceNodes();
+            }
+        }
+        if (this._totalTime <= this.seek()) {
+            this.stop();
         }
         return;
     }
