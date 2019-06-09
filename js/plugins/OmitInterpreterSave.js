@@ -152,9 +152,27 @@
                 $gameMap._mapId !== $gameMap._interpreter._mapId &&
                 $gameMap._interpreter._pageIndex !== undefined
             ) {
-                DataManager.loadMapData($gameMap._interpreter._mapId);
-                while (!DataManager.isMapLoaded()) {
-                    await SceneManager.onNextFrame();
+                if (SceneManager.onNextFrame) {
+                    DataManager.loadMapData($gameMap._interpreter._mapId);
+                    while (!DataManager.isMapLoaded()) {
+                        await SceneManager.onNextFrame();
+                    }
+                } else {
+                    var xhr = new XMLHttpRequest();
+                    var url = 'data/Map%1.json'.format($gameMap._interpreter._mapId.padZero(3));
+                    xhr.open('GET', url, false);
+                    xhr.overrideMimeType('application/json');
+                    xhr.onload = function() {
+                        if (xhr.status < 400) {
+                            $dataMap = JSON.parse(xhr.responseText);
+                            DataManager.onLoad($dataMap);
+                        }
+                    };
+                    xhr.onerror = function() {
+                        DataManager._errorUrl = DataManager._errorUrl || url;
+                    };
+                    $dataMap = null;
+                    xhr.send();
                 }
                 $gameTemp._preloadList =
                     $dataMap.events[$gameMap._interpreter._eventId].pages[
