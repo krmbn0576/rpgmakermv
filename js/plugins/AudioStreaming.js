@@ -317,9 +317,10 @@ WebAudio.prototype._loading = async function(reader) {
         console.error(error);
         const autoPlay = this._autoPlay;
         const loop = this._loop;
+        const pos = this.seek();
         this.initialize(this._url);
         if (autoPlay) {
-            this.play(loop, this.seek());
+            this.play(loop, pos);
         }
     }
 };
