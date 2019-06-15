@@ -5,6 +5,7 @@
 // ----------------------------------------------------------------------------
 // 2019/06/02 ループタグの指定範囲が全長を超えた場合のループ処理を修正
 // 2019/06/02 デコード結果がない場合にエラーになるのを修正
+// 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
 //=============================================================================
 
 /*:
@@ -199,7 +200,21 @@ if (window.ResourceHandler) {
             if (response.ok) {
                 switch (method) {
                     case 'stream':
-                        return response.body.getReader();
+                        if (response.body) {
+                            return response.body.getReader();
+                        }
+                        const value = await response.arrayBuffer();
+                        return {
+                            _done: false,
+                            read() {
+                                if (!this._done) {
+                                    this._done = true;
+                                    return Promise.resolve({ done: false, value });
+                                } else {
+                                    return Promise.resolve({ done: true });
+                                }
+                            }
+                        };
                     case 'arrayBuffer':
                     case 'blob':
                     case 'formData':
