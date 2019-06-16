@@ -6,6 +6,7 @@
 // 2019/06/02 ループタグの指定範囲が全長を超えた場合のループ処理を修正
 // 2019/06/02 デコード結果がない場合にエラーになるのを修正
 // 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
+// 2019/06/16 暗号化音声ファイル対応
 //=============================================================================
 
 /*:
@@ -203,7 +204,7 @@ if (window.ResourceHandler) {
                         if (response.body) {
                             return response.body.getReader();
                         }
-                        const value = await response.arrayBuffer();
+                        const value = new Uint8Array(await response.arrayBuffer());
                         return {
                             _done: false,
                             read() {
@@ -319,13 +320,9 @@ WebAudio.prototype._loading = async function(reader) {
             }
             let array = value;
             if (Decrypter.hasEncryptedAudio) {
-                try {
-                    array = Decrypter.decryptArrayBuffer(array);
-                } catch (error) {
-                    array = Decrypter.decryptArrayBufferNoCheck(array);
-                }
+                array = Decrypter.decryptUint8Array(array);
             }
-            this._readLoopComments(new Uint8Array(array));
+            this._readLoopComments(array);
             decode({ data: array, eof: false });
         }
     } catch (error) {
@@ -594,38 +591,19 @@ WebAudio.prototype._readLoopComments = function(array) {
     }
 };
 
-Decrypter.decryptArrayBuffer = function(arrayBuffer) {
-    if (!arrayBuffer) return null;
-    var header = new Uint8Array(arrayBuffer, 0, this._headerlength);
-
-    var i;
-    var ref = this.SIGNATURE + this.VER + this.REMAIN;
-    var refBytes = new Uint8Array(16);
-    for (i = 0; i < this._headerlength; i++) {
-        refBytes[i] = parseInt('0x' + ref.substr(i * 2, 2), 16);
-    }
-    for (i = 0; i < this._headerlength; i++) {
-        if (header[i] !== refBytes[i]) {
-            throw new Error('Header is wrong');
+Decrypter.decryptUint8Array = function(uint8Array) {
+    const ref = this.SIGNATURE + this.VER + this.REMAIN;
+    for (let i = 0; i < this._headerlength; i++) {
+        if (uint8Array[i] !== parseInt('0x' + ref.substr(i * 2, 2), 16)) {
+            return uint8Array;
         }
     }
-
-    arrayBuffer = this.cutArrayHeader(arrayBuffer, Decrypter._headerlength);
-    return this.decryptArrayBufferNoCheck(arrayBuffer);
-};
-
-Decrypter.decryptArrayBufferNoCheck = function(arrayBuffer) {
-    var view = new DataView(arrayBuffer);
+    uint8Array = new Uint8Array(uint8Array.buffer, this._headerlength);
     this.readEncryptionkey();
-    if (arrayBuffer) {
-        var byteArray = new Uint8Array(arrayBuffer);
-        for (var i = 0; i < this._headerlength; i++) {
-            byteArray[i] =
-                byteArray[i] ^ parseInt(Decrypter._encryptionKey[i], 16);
-            view.setUint8(i, byteArray[i]);
-        }
+    for (var i = 0; i < this._headerlength; i++) {
+        uint8Array[i] = uint8Array[i] ^ parseInt(this._encryptionKey[i], 16);
     }
-
-    return arrayBuffer;
+    return uint8Array;
 };
+
 }
