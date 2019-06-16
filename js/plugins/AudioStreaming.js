@@ -7,6 +7,7 @@
 // 2019/06/02 デコード結果がない場合にエラーになるのを修正
 // 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
 // 2019/06/16 暗号化音声ファイル対応
+// 2019/06/16 プツプツ対策
 //=============================================================================
 
 /*:
@@ -344,7 +345,9 @@ WebAudio.prototype._onDecode = function(result) {
     }
     if (result.eof) {
         this._totalTime = this._loadedTime;
-        if (this._loopLength === 0) {
+        if (this._concatMode()) {
+            this._createConcatBuffer();
+        } else if (this._loopLength === 0) {
             this._loopStart = 0;
             this._loopLength = this._totalTime;
             if (this._loop) {
@@ -464,7 +467,10 @@ WebAudio.prototype._calcSourceNodeParams = function(chunk) {
     const chunkEnd = chunk.when + chunk.buffer.duration;
     const pos = this.seek();
     let when, offset, duration;
-    if (this._loop && this._loopLength) {
+    if (this._totalTime && this._concatMode()) {
+        when = currentTime;
+        offset = pos;
+    } else if (this._loop && this._loopLength) {
         const loopEnd = this._loopStart + this._loopLength;
         if (pos <= chunk.when) {
             when = currentTime + (chunk.when - pos) / this._pitch;
@@ -478,7 +484,7 @@ WebAudio.prototype._calcSourceNodeParams = function(chunk) {
         } else {
             return;
         }
-        if (this._loopStart <= pos && chunk.when < this._loopStart) {
+        if (chunk.when < this._loopStart && this._loopStart <= pos) {
             if (!offset) {
                 when += (this._loopStart - chunk.when) / this._pitch;
                 offset = this._loopStart - chunk.when;
@@ -520,7 +526,7 @@ WebAudio.prototype._createSourceNode = function(chunk) {
     }
     const params = this._calcSourceNodeParams(chunk);
     if (!params) {
-        if (!this._reservedSeName) {
+        if (!this._reservedSeName && !this._concatMode()) {
             this._chunks[this._chunks.indexOf(chunk)] = null;
         }
         return;
@@ -537,6 +543,11 @@ WebAudio.prototype._createSourceNode = function(chunk) {
     sourceNode.buffer = chunk.buffer;
     sourceNode.playbackRate.setValueAtTime(this._pitch, context.currentTime);
     sourceNode.connect(this._gainNode);
+    if (this._totalTime && this._concatMode()) {
+        sourceNode.loop = this._loop;
+        sourceNode.loopStart = this._loopStart;
+        sourceNode.loopEnd = this._loopStart + this._loopLength;
+    }
     sourceNode.start(when, offset, duration);
     chunk.sourceNode = sourceNode;
 };
@@ -591,6 +602,43 @@ WebAudio.prototype._readLoopComments = function(array) {
     }
 };
 
+WebAudio.prototype._concatMode = function() {
+    return window.Utils && Utils.isNwjs();
+};
+
+WebAudio.prototype._createConcatBuffer = function() {
+    if (this._loopLength === 0) {
+        this._loopStart = 0;
+    }
+    const old = this._chunks.filter(chunk => chunk.sourceNode);
+    const buffers = this._chunks.map(chunk => {
+        const result = [];
+        for (let i = 0; i < chunk.buffer.numberOfChannels; i++) {
+            result.push(chunk.buffer.getChannelData(i));
+        }
+        return result;
+    });
+    const totalLength = buffers.reduce((acc, buffer) => acc + buffer[0].length, 0);
+    const sampleRate = this._chunks[0].buffer.sampleRate;
+    const data = [];
+    for (let i = 0, pos = 0; i < buffers.length; i++) {
+        for (let channel = 0; channel < buffers[i].length; channel++) {
+            if (!data[channel]) {
+                data[channel] = new Float32Array(totalLength);
+            }
+            data[channel].set(buffers[i][channel], pos);
+        }
+        pos += buffers[i][0].length;
+    }
+    this._loadedTime = 0;
+    this._chunks = [];
+    this._onDecode({ data, sampleRate });
+    old.forEach(chunk => {
+        chunk.sourceNode.onended = null;
+        chunk.sourceNode.stop();
+    });
+};
+
 Decrypter.decryptUint8Array = function(uint8Array) {
     const ref = this.SIGNATURE + this.VER + this.REMAIN;
     for (let i = 0; i < this._headerlength; i++) {
@@ -598,12 +646,12 @@ Decrypter.decryptUint8Array = function(uint8Array) {
             return uint8Array;
         }
     }
-    uint8Array = new Uint8Array(uint8Array.buffer, this._headerlength);
+    const cutArray = new Uint8Array(uint8Array.buffer, this._headerlength);
     this.readEncryptionkey();
-    for (var i = 0; i < this._headerlength; i++) {
-        uint8Array[i] = uint8Array[i] ^ parseInt(this._encryptionKey[i], 16);
+    for (let i = 0; i < this._headerlength; i++) {
+        cutArray[i] = cutArray[i] ^ parseInt(this._encryptionKey[i], 16);
     }
-    return uint8Array;
+    return cutArray;
 };
 
 }
