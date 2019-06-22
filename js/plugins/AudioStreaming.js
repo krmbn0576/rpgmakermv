@@ -7,6 +7,7 @@
 // 2019/06/02 デコード結果がない場合にエラーになるのを修正
 // 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
 // 2019/06/16 暗号化音声ファイル対応
+// 2019/06/22 Safariでサンプルレート8000～22050に対応
 //=============================================================================
 
 /*:
@@ -364,11 +365,34 @@ WebAudio.prototype._onDecode = function(result) {
     if (result.data[0].length === 0) {
         return;
     }
-    const buffer = WebAudio._context.createBuffer(
-        result.data.length,
-        result.data[0].length,
-        result.sampleRate
-    );
+    let buffer;
+    try {
+        buffer = WebAudio._context.createBuffer(
+            result.data.length,
+            result.data[0].length,
+            result.sampleRate
+        );
+    } catch (error) {
+        if (8000 <= result.sampleRate && result.sampleRate < 22050) {
+            result.sampleRate *= 3;
+            for (let i = 0; i < result.data.length; i++) {
+                const old = result.data[i];
+                result.data[i] = new Float32Array(result.data[i].length * 3);
+                for (let j = 0; j < old.length; j++) {
+                    result.data[i][j * 3] = old[j];
+                    result.data[i][j * 3 + 1] = old[j];
+                    result.data[i][j * 3 + 2] = old[j];
+                }
+            }
+            buffer = WebAudio._context.createBuffer(
+                result.data.length,
+                result.data[0].length,
+                result.sampleRate
+            );
+        } else {
+            throw error;
+        }
+    }
     for (let i = 0; i < result.data.length; i++) {
         if (buffer.copyToChannel) {
             buffer.copyToChannel(result.data[i], i);
