@@ -8,6 +8,7 @@
 // 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
 // 2019/06/16 暗号化音声ファイル対応
 // 2019/06/22 Safariでサンプルレート8000～22050に対応
+// 2019/06/27 Safariで一部音声が二重に流れることがある不具合を修正
 // 2019/06/29 Cordovaで動作するように修正
 //=============================================================================
 
@@ -492,7 +493,7 @@ WebAudio.prototype._calcSourceNodeParams = function(chunk) {
         const loopEnd = this._loopStart + this._loopLength;
         if (pos <= chunk.when) {
             when = currentTime + (chunk.when - pos) / this._pitch;
-        } else if (pos <= chunkEnd) {
+        } else if (pos <= (window.AudioContext ? chunkEnd : chunkEnd - 0.0001)) {
             when = currentTime;
             offset = pos - chunk.when;
         } else if (this._loopStart <= pos) {
@@ -523,7 +524,7 @@ WebAudio.prototype._calcSourceNodeParams = function(chunk) {
     } else {
         if (pos <= chunk.when) {
             when = currentTime + (chunk.when - pos) / this._pitch;
-        } else if (pos <= chunkEnd) {
+        } else if (pos <= (window.AudioContext ? chunkEnd : chunkEnd - 0.0001)) {
             when = currentTime;
             offset = pos - chunk.when;
         } else {
