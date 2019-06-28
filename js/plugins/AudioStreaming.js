@@ -8,6 +8,7 @@
 // 2019/06/15 Windows7のFirefoxでストリーミングが無効なバグの場合、フォールバック
 // 2019/06/16 暗号化音声ファイル対応
 // 2019/06/22 Safariでサンプルレート8000～22050に対応
+// 2019/06/29 Cordovaで動作するように修正
 //=============================================================================
 
 /*:
@@ -198,7 +199,17 @@ if (window.ResourceHandler) {
     ) {
         let retry;
         try {
-            const response = await fetch(url, { credentials: 'same-origin' });
+            const response = await (!window.cordova ?
+                fetch(url, { credentials: 'same-origin' }) :
+                new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.responseType = 'blob';
+                    xhr.onload = () => resolve(new Response(xhr.response, { status: xhr.status }));
+                    xhr.onerror = reject;
+                    xhr.open('GET', url);
+                    xhr.send();
+                })
+            );
             if (response.ok) {
                 switch (method) {
                     case 'stream':
@@ -234,7 +245,7 @@ if (window.ResourceHandler) {
                 retry = true;
             }
         } catch (error) {
-            if (Utils.isNwjs()) {
+            if (Utils.isNwjs() || window.cordova) {
                 // local file error
                 retry = false;
             } else {
@@ -261,17 +272,6 @@ if (window.ResourceHandler) {
                     resolve(this.fetchWithRetry(method, url, 0))
                 )
             );
-        }
-    };
-} else {
-    window.ResourceHandler = {
-        async fetchWithRetry(url) {
-            const response = await fetch(url, { credentials: 'same-origin' });
-            if (response.ok) {
-                return response.body.getReader();
-            } else {
-                throw new Error();
-            }
         }
     };
 }
