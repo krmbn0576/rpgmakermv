@@ -4,6 +4,7 @@
 // ----------------------------------------------------------------------------
 // 2017/09/03 iOSで「決定」ボタンを押せないバグを修正＆裏のゲーム画面のクリックを無効に
 // 2018/12/06 入力欄の大きさを画面サイズに追従＆iPhoneで画面がズレるバグ修正＆文字サイズ設定＆初期値設定
+// 2019/07/28 Plicyでcssファイルが無効になる（Plicy側の）バグを回避
 //=============================================================================
 
 /*:
@@ -56,13 +57,15 @@
     }
 
     // css追加
-    (function(){
-        var css = document.createElement('link');
-        css.rel = "stylesheet";
-        css.type = 'text/css';
-        css.href = './css/111_InputForm.css';
+    (async function(){
+        var style = document.createElement('style');
+        var response = await fetch('./css/111_InputForm.css');
+        if (!response.ok) {
+            throw new Error('111_InputForm.cssが読み込めません');
+        }
+        style.innerHTML = await response.text();
         var b_top = document.getElementsByTagName('head')[0];
-        b_top.appendChild(css);
+        b_top.appendChild(style);
     })();
     // キー入力不可にする為に
     Input.form_mode = false;
