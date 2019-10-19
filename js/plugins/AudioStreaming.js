@@ -10,6 +10,7 @@
 // 2019/06/22 Safariでサンプルレート8000～22050に対応
 // 2019/06/27 Safariで一部音声が二重に流れることがある不具合を修正
 // 2019/06/29 Cordovaで動作するように修正
+// 2019/10/20 ループタグがない場合に二周目以降の先頭が途切れることがある不具合を修正
 //=============================================================================
 
 /*:
@@ -547,7 +548,7 @@ WebAudio.prototype._createSourceNode = function(chunk) {
     }
     const params = this._calcSourceNodeParams(chunk);
     if (!params) {
-        if (!this._reservedSeName) {
+        if (!this._reservedSeName && this._loopLength) {
             this._chunks[this._chunks.indexOf(chunk)] = null;
         }
         return;
