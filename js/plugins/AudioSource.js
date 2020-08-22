@@ -13,33 +13,65 @@
 // 2018/06/27 panが0と0以外の値をまたぐ時、ノイズが入る（環境がある）バグを対策
 // 2018/07/31 ロード直後、一瞬だけ音源処理が反映されないバグを修正しました
 // 2018/09/16 2018/06/27が無意味だったので打ち消し。ノイズが入ったら本体バージョンを1.6.1以上に上げましょう
+// 2020/08/22 RPGツクールMZに対応
 //=============================================================================
 
 /*:
+ * @target MZ
  * @plugindesc 音源と聞き手の位置関係に応じて自動的に音量・位相を調節します。
  * @author くらむぼん
  *
  * @param listener
- * @desc 音の「聞き手」をscreenかplayerから選ぶ
+ * @type select
+ * @text 音の聞き手
+ * @option 画面の中央
+ * @value screen
+ * @option プレイヤー
+ * @value player
  * @default screen
  *
  * @param decay
- * @desc 音源と聞き手の距離が一歩広がった時の音量変化倍率（％）
+ * @type number
+ * @text 音の減衰率
+ * @desc 音源と聞き手の距離が一歩広がった時の音量変化倍率（％）。小さくするほど、一歩ごとに極端に音量が減ります。
  * @default 85
  *
  * @param pan
- * @desc 音源が聞き手の一歩右に居る時の変化位相
+ * @type number
+ * @text 音の左右移動率
+ * @desc 音源が聞き手の一歩右に居る時の変化位相。大きくするほど、一歩ごとに極端に左右に音が振られます。
  * @default 10
  *
  * @param cutoff
+ * @type number
+ * @text 最小再生音量
  * @desc 音を鳴らすことを許可する最小の音量（％）
  * @default 1
  *
  * @help
- * マップイベントの「ルート設定」内で効果音を鳴らすと、
- * そのイベントが配置されている座標から鳴ったかのように音量・位相を調節します。
- * 具体的には、「音源」と「聞き手」が離れているほど音量が小さくなり、
- * 「聞き手」より「音源」が右にあるほど位相が増加（＝右から聞こえる）します。
+ * 「ある特定の場所から音が聞こえてくる」という演出を可能にするプラグインです。
+ * 具体的には特定のマップイベントを音源（音の発し手）として音声を演奏でき、
+ * 音の聞き手（初期設定では画面の中央）との距離感によって音量などが変化します。
+ * 音源と聞き手の距離が縮まるほど音量が大きくなりますし、
+ * 音源が聞き手よりも右の方にあれば、音が右から聞こえてくる（位相が増える）ようになります。
+ * 
+ * 
+ * ---RPGツクールMZでの使い方---
+ * プラグインコマンドの「音源から音声を演奏」を用いて、
+ * 音声を特定の場所（音源）から聞こえるように演奏することができます。
+ * 
+ * ※BGM,BGSについては、音源から演奏したまま別のマップへ移動すると
+ * 　音源が行方不明になるため、聞こえ方がおかしくなります。
+ * 　移動前に演奏を止めるか、移動後にプラグインコマンドを再設定しましょう。
+ * 
+ * この他にも、音の聞き手を特定のマップイベントに変更するコマンドや
+ * 「移動ルートの設定」「アニメーションの表示」におけるSEを自動で音源化するコマンドもあります。
+ * 慣れたらそちらも使ってみてください。
+ * 
+ * 
+ * 
+ * ---RPGツクールMVでの使い方---
+ * マップイベントの「ルート設定」内で効果音を鳴らすと、プラグインの効果が発動します。
  * ※イベントコマンドの「SEの演奏」では自動調節しません。うまく使い分けましょう。
  * また、「アニメーションの表示」の効果音も対象の位置から聞こえるようになります。
  * 
@@ -104,11 +136,60 @@
  * 
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
+ * 
+ * @command play
+ * @text 音源から音声を演奏
+ * @desc 音源（音の発し手）と聞き手の位置関係を計算し、音声を音源から聞こえてくるように演奏します。
+ *
+ * @arg path
+ * @type file
+ * @dir audio
+ * @text 音声ファイル
+ * 
+ * @arg volume
+ * @type number
+ * @default 90
+ * @text 音量（％）
+ * 
+ * @arg pitch
+ * @type number
+ * @default 100
+ * @text ピッチ（％）
+ * 
+ * @arg source
+ * @type number
+ * @default 0
+ * @text 音源イベント
+ * @desc 音源にするマップイベントをIDで指定します。0のときは「このイベント」になります。
+ * 
+ * @command listener
+ * @text 音の聞き手の変更
+ * @desc 音の聞き手にするマップイベントをIDで指定します。0で解除（聞き手が画面の中央/プレイヤーに戻る）します。
+ * 
+ * @arg listener
+ * @type number
+ * @default 0
+ * @text 聞き手イベント
+ * 
+ * @command adjustRouteSe
+ * @text 移動ルートのSEを音源化
+ * @desc 「移動ルートの設定」の内部に「SEの演奏」があるとき、自動的に対象のイベントから音が聞こえるようにします。
+ * 
+ * @arg value
+ * @type boolean
+ * 
+ * @command adjustAnimationSe
+ * @text アニメーションのSEを音源化
+ * @desc 「アニメーションの表示」でアニメにSEが含まれるとき、自動的に対象のイベントから音が聞こえるようにします。
+ * 
+ * @arg value
+ * @type boolean
  */
 
 (function() {
 	'use strict';
-	var parameters = PluginManager.parameters('AudioSource');
+	var pluginName = 'AudioSource';
+	var parameters = PluginManager.parameters(pluginName);
 	var listener = parameters['listener'];
 	var decay = toNumber(parameters['decay'], 85).clamp(0, Infinity);
 	var pan = toNumber(parameters['pan'], 10);
@@ -117,7 +198,8 @@
 	//効果音の音量調節（マップイベントのルート設定から鳴らした時のみ）
 	var _Game_Character_processMoveCommand = Game_Character.prototype.processMoveCommand;
 	Game_Character.prototype.processMoveCommand = function(command) {
-		if (command.code === Game_Character.ROUTE_PLAY_SE) playAdjustSe(command.parameters[0], this);
+		var adjust = typeof $gameSystem._adjustRouteSe === "boolean" ? $gameSystem._adjustRouteSe : !PluginManager.registerCommand;
+		if (adjust && command.code === Game_Character.ROUTE_PLAY_SE) playAdjustSe(command.parameters[0], this);
 		else _Game_Character_processMoveCommand.apply(this, arguments);
 	};
 
@@ -136,7 +218,8 @@
 			break;
 		}
 		if (!this._duplicated && timing.se) {
-			playAdjustSe(timing.se, this._target && this._target._character);
+			var adjust = typeof $gameSystem._adjustAnimationSe === "boolean" ? $gameSystem._adjustAnimationSe : !PluginManager.registerCommand;
+			playAdjustSe(timing.se, adjust && this._target && this._target._character);
 		}
 	};
 
@@ -258,13 +341,74 @@
 					else $gameSystem._bgsSource = eventId;
 					break;
 				case 'se':
-					$gameSystem._seSourceOff = args[1].toLowerCase() === 'off';
+					$gameSystem._adjustRouteSe = $gameSystem._adjustAnimationSe = args[1].toLowerCase() !== 'off';
 					break;
 				default:
 					break;
 			}
 		}
 	};
+
+	if (PluginManager.registerCommand) {
+        PluginManager.registerCommand(pluginName, "play", function(args) {
+			var { path, volume, pitch, source } = args;
+			var [ dir, name ] = path.split("/");
+			var eventId = +source || this._eventId;
+			var pan = 0;
+            switch (dir) {
+				case "bgm": {
+					$gameSystem._bgmSource = eventId;
+					AudioManager.playBgm({ name, volume, pitch, pan });
+					break;
+				}
+				case "bgs": {
+					if ($gameSystem.getBgsLine) {
+						$gameSystem._bgsSources = $gameSystem._bgsSources || [];
+						$gameSystem._bgsSources[$gameSystem.getBgsLine()] = eventId;
+					}
+					else $gameSystem._bgsSource = eventId;
+					AudioManager.playBgs({ name, volume, pitch, pan });
+					break;
+				}
+				case "me": {
+					playAdjustMe({ name, volume, pitch, pan }, $gameMap.event(eventId));
+					break;
+				}
+				case "se": {
+					playAdjustSe({ name, volume, pitch, pan }, $gameMap.event(eventId));
+					break;
+				}
+			}
+		});
+
+		PluginManager.registerCommand(pluginName, "listener", function(args) {
+			$gameSystem._listenerEvent = args.listener;
+		});
+
+		PluginManager.registerCommand(pluginName, "adjustRouteSe", function(args) {
+			$gameSystem._adjustRouteSe = args.value === "true";
+		});
+
+		PluginManager.registerCommand(pluginName, "adjustAnimationSe", function(args) {
+			$gameSystem._adjustAnimationSe = args.value === "true";
+		});
+
+		var _Game_Intepreter_command241 = Game_Interpreter.prototype.command241;
+		Game_Interpreter.prototype.command241 = function(params) {
+			$gameSystem._bgmSource = NaN;
+			return _Game_Intepreter_command241.apply(this, arguments);
+		};
+
+		var _Game_Intepreter_command245 = Game_Interpreter.prototype.command245;
+		Game_Interpreter.prototype.command245 = function(params) {
+			if ($gameSystem.getBgsLine) {
+				$gameSystem._bgsSources = $gameSystem._bgsSources || [];
+				$gameSystem._bgsSources[$gameSystem.getBgsLine()] = NaN;
+			}
+			else $gameSystem._bgsSource = NaN;
+			return _Game_Intepreter_command245.apply(this, arguments);
+		};
+    }
 
 	function toNumber(str, def) {
 		return isNaN(str) ? def : +(str || def);
@@ -285,9 +429,22 @@
 		}
 	}
 
+	//MEの音量と位相を調節して再生する
+	function playAdjustMe(se, source) {
+		if (source) {
+			var lastVolume = se.volume;
+			var lastPan = se.pan;
+			adjust(se, source);
+			if (se.volume >= cutoff) AudioManager.playSe(se);
+			se.volume = lastVolume;
+			se.pan = lastPan;
+		}
+		else AudioManager.playSe(se);
+	}
+
 	//SEの音量と位相を調節して再生する
 	function playAdjustSe(se, source) {
-		if (source && !$gameSystem._seSourceOff) {
+		if (source) {
 			var lastVolume = se.volume;
 			var lastPan = se.pan;
 			adjust(se, source);
@@ -317,7 +474,6 @@
 					break;
 				default:
 					throw new Error('audiosourceエラー：listenerパラメータはscreenかplayerにしてください');
-					break;
 			}
 		}
 		var dx = $gameMap.deltaX(source._realX, listenerX);

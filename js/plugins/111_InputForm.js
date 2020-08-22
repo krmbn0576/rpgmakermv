@@ -4,14 +4,34 @@
 // ----------------------------------------------------------------------------
 // 2017/09/03 iOSで「決定」ボタンを押せないバグを修正＆裏のゲーム画面のクリックを無効に
 // 2018/12/06 入力欄の大きさを画面サイズに追従＆iPhoneで画面がズレるバグ修正＆文字サイズ設定＆初期値設定
+// 2020/08/22 RPGツクールMZに対応
 //=============================================================================
 
 /*:
+ * @target MZ
  * @plugindesc フォーム作って文字入力（修正版）
  * @author １１１, くらむぼん
  *
  *
- * @help InputForm x=350;y=200;v=11;max=5;
+ * @help
+ * 文字入力フォームを表示して、文字を入力させます。
+ * イベントコマンドの「名前入力の処理」とは違い、
+ * 慣れ親しんだキーボード入力やフリック入力などを用いられます。
+ * また、漢字を含む自由な文字が入力できます。
+ * 
+ * ---準備---
+ * ゲームフォルダにあるcssフォルダ（なければ作る）に111_InputForm.cssを入れましょう。
+ * ちなみにこのファイルをいじって入力フォームのデザイン・幅などを変えられます。
+ * いじり方がわからなかったら「css 書き方」などで検索だ！
+ * 
+ * ---RPGツクールMZでの使い方---
+ * プラグインコマンドを用いて、入力欄を表示できます。
+ * 最低限「入力欄のX位置」「入力欄のY位置」で表示位置を調整して、
+ * 「入力結果の代入先」に変数を設定すれば動きます。
+ * 必要なら他のパラメータも調節してみてください。
+ * 
+ * ---RPGツクールMVでの使い方---
+ * ◆プラグインコマンド：InputForm x=350;y=200;v=11;max=5;
  * みたいな感じで。この例だとx350,y200の位置に表示、結果を11番の変数に保存。
  * 最大文字数は5（maxは省略すれば無制限にもできる）
  *
@@ -20,10 +40,6 @@
  * 並列イベントの中で、スイッチ３をONにするイベントを作りましょう
  * （ハマリポイント１）なおこの際、強制終了した瞬間の
  * テキストが結果の変数にしっかり保存されていることに注意。
- *
- * index.htmlと同じ場所にcssフォルダを作ってそこに111_InputForm.cssを入れること。
- * このファイルをいじって文字の大きさや、ウィンドウのデザイン・幅とかも変えられる
- * いじり方がわからなかったら「css 書き方」などで検索だ！
  *
  * 入力が終わるまで次のイベントコマンドは読み込みません
  * （ハマリポイント２）次のイベントコマンドの読み込みまでは
@@ -49,6 +65,51 @@
  *
  * ライセンス：
  * このプラグインの利用法に制限はありません。お好きなようにどうぞ。
+ *
+ * @command show
+ * @text 文字入力の処理
+ * @desc
+ *
+ * @arg target_x
+ * @type number
+ * @text 入力欄のX位置
+ *
+ * @arg target_y
+ * @type number
+ * @text 入力欄のY位置
+ *
+ * @arg variables_id
+ * @type variable
+ * @text 入力結果の代入先
+ *
+ * @arg max_count
+ * @type number
+ * @text 最大文字数
+ *
+ * @arg if_switch_id
+ * @type switch
+ * @text ONのとき入力を強制終了
+ *
+ * @arg button_x
+ * @type number
+ * @min -10000
+ * @default 0
+ * @text 決定ボタンの相対X位置
+ *
+ * @arg button_y
+ * @type number
+ * @min -10000
+ * @default 50
+ * @text 決定ボタンの相対Y位置
+ *
+ * @arg unit_font_size
+ * @type number
+ * @default 24
+ * @text 文字サイズ
+ *
+ * @arg placeholder
+ * @type string
+ * @text 入力欄の初期値
 */
 (function() {
     function stopPropagation(event) {
@@ -119,9 +180,20 @@
             var if_switch_id = Number(_ary[4]) || null;
             var button_x = +_ary[5] || 0;
             var button_y = _ary[6] === '' || isNaN(_ary[6]) ? 50 : +_ary[6];
-            var unitFontSize = _ary[7] === '' || isNaN(_ary[7]) ? 24 : +_ary[7];
+            var unit_font_size = _ary[7] === '' || isNaN(_ary[7]) ? 24 : +_ary[7];
             var placeholder = _ary[8];
+            this._inputForm(target_x, target_y, variables_id, max_count, if_switch_id, button_x, button_y, unit_font_size, placeholder);
+        }
+    };
 
+    if (PluginManager.registerCommand) {
+        PluginManager.registerCommand("111_InputForm", "show", function(args) {
+            var { target_x, target_y, variables_id, max_count, if_switch_id, button_x, button_y, unit_font_size, placeholder } = args;
+            this._inputForm(+target_x, +target_y, +variables_id, +max_count, +if_switch_id, +button_x, +button_y, +unit_font_size, placeholder);
+        });
+    }
+
+    Game_Interpreter.prototype._inputForm = function(target_x, target_y, variables_id, max_count, if_switch_id, button_x, button_y, unit_font_size, placeholder) {
             var interpreter = this;
             var gui = {
                 input : null ,
@@ -176,12 +248,12 @@
                 } ,
                 screenAdjust : function(){ // canvasの左上を基準にした位置に合わせる
                     var screen_x , screen_y;
-                    var _canvas = document.querySelector('#UpperCanvas');
+                    var _canvas = document.getElementById('UpperCanvas') || document.getElementById('gameCanvas');
                     var rect = _canvas.getBoundingClientRect();
                     screen_x = rect.left;
                     screen_y = rect.top;
-                    this.input.postionAdjust([screen_x,screen_y] , [target_x,target_y], unitFontSize);
-                    this.submit.postionAdjust([screen_x,screen_y] , [target_x + button_x,target_y + button_y], unitFontSize);
+                    this.input.postionAdjust([screen_x,screen_y] , [target_x,target_y], unit_font_size);
+                    this.submit.postionAdjust([screen_x,screen_y] , [target_x + button_x,target_y + button_y], unit_font_size);
                 }
             }
             //
@@ -220,6 +292,5 @@
             //}
             //
             gui.start();
-        }
     };
 })();
