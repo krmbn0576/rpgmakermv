@@ -430,16 +430,16 @@
 	}
 
 	//MEの音量と位相を調節して再生する
-	function playAdjustMe(se, source) {
+	function playAdjustMe(me, source) {
 		if (source) {
-			var lastVolume = se.volume;
-			var lastPan = se.pan;
-			adjust(se, source);
-			if (se.volume >= cutoff) AudioManager.playSe(se);
-			se.volume = lastVolume;
-			se.pan = lastPan;
+			var lastVolume = me.volume;
+			var lastPan = me.pan;
+			adjust(me, source);
+			if (me.volume >= cutoff) AudioManager.playMe(me);
+			me.volume = lastVolume;
+			me.pan = lastPan;
 		}
-		else AudioManager.playSe(se);
+		else AudioManager.playMe(me);
 	}
 
 	//SEの音量と位相を調節して再生する
