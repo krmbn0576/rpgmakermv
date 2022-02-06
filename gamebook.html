@@ -31,7 +31,7 @@ function createScene(no, event) {
             if (operator === ":") variables[variable] = delta;
             if (operator === "+") variables[variable] += delta;
             if (operator === "-") variables[variable] -= delta;
-            return `${replaceFn(variable)}:${variables[variable]} (${operator}${dice}${value}${dice ? ` => ${operator === "-" ? -delta : delta}` : ""})`;
+            return `${replaceFn(line)} (${dice ? `${operator}${delta} ` : ""}=> ${variables[variable]})`;
         }
         if (match = line.match(/^\s*(\S+)\s+(:|\+|-)(\S+)\s*$/)) {
             const [, variable, operator, value] = match;
@@ -41,7 +41,7 @@ function createScene(no, event) {
             if (operator === ":") variables[variable] = delta;
             if (operator === "+") variables[variable] += delta;
             if (operator === "-") variables[variable] -= delta;
-            return `${replaceFn(variable)}:${variables[variable]} (${operator}${replaceFn(value)} => ${operator === "-" ? -delta : delta})`;
+            return `${replaceFn(line)} (${operator}${delta} => ${variables[variable]})`;
         }
         if (match = line.match(/^.*?\S+\s+#(\d+)\s*(\S+)\s+(=|<|>|<=|>=)(-?\d+)\s*$/)) {
             const [, no, variable, operator, value] = match;
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 魔王「貴様！名を名乗れ！！！」
 
-勇者である、あなたの名前は？
+あなた（勇者）の名前は？
 勇者 <=
 
 ・決定 #11
