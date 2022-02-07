@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>body { max-width: 600px; margin: auto; color: #444444 } textarea { width: 100%; height: 80vh }</style>
+    <script>
+        const script = `
+const scenes = {};
+const variables = {};
+const replacements = {};
+
+function createScene(no, event) {
+    if (event) {
+        event.preventDefault();
+        if (!document.body.lastChild.style.height) document.body.lastChild.style.height = "100vh";
+        if (event.target.parentNode !== document.body.lastChild.previousSibling) return;
+    }
+    let choiceState = "initial";
+    const replaceRe = new RegExp(\`(\${Object.keys(replacements).join("|") || "0^"})\`, "g");
+    const replaceFn = text => text.replace(replaceRe, (_, key) => replacements[key]);
+    const text = scenes[no].split("\\n").map(line => {
+        let match = null;
+        if (match = line.match(/^\\s*(\\S+)\\s*<=\\s*$/)) {
+            const onchange = \`if (event.target.parentNode === document.body.lastChild.previousSibling) replacements['\${match[1]}'] = event.target.value\`;
+            return \`<input type="text" value="\${replacements[match[1]] ?? match[1]}" onchange="\${onchange}">\`;
+        }
+        if (match = line.match(/^\\s*(\\S+)\\s*(:|\\+|-|~)\\s*(\\S+)\\s*$/)) {
+            const [, variable, operator, value] = match;
+            const isVariant = /\\D+/.test(value);
+            if (isVariant && variables[value] === undefined) return replaceFn(line);
+            variables[variable] ??= 0;
+            const operand = isVariant ? variables[value] : +value;
+            if (operator === ":") variables[variable] = operand;
+            if (operator === "+") variables[variable] += operand;
+            if (operator === "-") variables[variable] -= operand;
+            if (operator === "~") variables[variable] = Math.floor(Math.random() * operand + 1);
+            return \`\${replaceFn(line)} (\${isVariant ? \`\${operator}\${operand} \` : ""}=> \${variables[variable]})\`;
+        }
+        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*(\\S+?)\\s*(=|<|>|<=|>=)\\s*(-?\\d+)\\s*$/)) {
+            const [, no, variable, operator, value] = match;
+            let meet = false;
+            if ((operator[0] === "=" || operator[1] === "=") && variables[variable] === +value) meet = true;
+            if (operator[0] === "<" && variables[variable] < +value) meet = true;
+            if (operator[0] === ">" && variables[variable] > +value) meet = true;
+            if (choiceState === "forced" || !meet) return replaceFn(line) + "<br>";
+            if (choiceState === "initial") choiceState = "forced";
+            return \`<a href="#\${no}" onclick="createScene(\${no}, event)">\${replaceFn(line)}</a><br>\`;
+        }
+        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*$/)) {
+            if (choiceState === "forced") return replaceFn(line) + "<br>";
+            if (choiceState === "initial") choiceState = "selectable";
+            return \`<a href="#\${match[1]}" onclick="createScene(\${match[1]}, event)">\${replaceFn(line)}</a><br>\`;
+        }
+        return replaceFn(line);
+    }).join("<br>");
+    document.body.lastChild.insertAdjacentHTML("beforebegin", \`<div>\${text}</div>\`);
+    scrollBy(0, document.body.lastChild.previousSibling.getBoundingClientRect().top);
+}
+
+function init() {
+    let key = 0;
+    document.body.textContent.split("\\n").forEach(line => {
+        let match = null;
+        if (match = line.match(/^\\s*#(\\d+)\\s*$/)) {
+            if (scenes[key]) scenes[key] = scenes[key].trim();
+            key = match[1];
+            scenes[key] = "";
+        }
+        scenes[key] += line + "\\n";
+    });
+    scenes[key] = scenes[key].trim();
+    if (location.protocol === "file:") {
+        document.body.innerHTML = "<div></div>";
+    } else {
+        const downloadStr = \`<!DOCTYPE html>\\n<html>\\n<head>\${document.head.innerHTML}</head>\\n<\${""}body>\${document.body.textContent.slice(0, -1)}</body>\\n</html>\`;
+        const downloadFile = new Blob([downloadStr], { type: "text/html" });
+        document.body.innerHTML = \`<div><a href="\${URL.createObjectURL(downloadFile)}" download="\${document.title}.html">この作品をダウンロード</a></div><div></div>\`;
+    }
+    createScene(1);
+};
+
+document.addEventListener("DOMContentLoaded", init);
+            `.trim();
+        
+        const dream = `
+#1
+
+あなたの名前を入力してください
+
+主人公 <=
+
+決定 #2
+
+
+
+#2
+
+ここに小説を書くと、文中に現れた「主人公」という文字は、読み手が最初に入力したものに置き換わります。
+            `.trim();
+
+        const quiz = `
+#1
+
+（選択肢は、行末にスペースを入れて「#2」のように移動先のページを書くことで作れます）
+
+問題．日本で一番高い山は？
+
+
+・富士山 #2
+・北岳 #3
+
+
+
+#2
+
+（３行下に書いてある「正解数 +1」という命令により、コンピューターが正解数をカウントアップしてくれます）
+
+正解！
+正解数 +1
+
+
+・最終問題へ #4
+
+
+
+#3
+
+ざんねん、それは日本で二番目です…
+
+
+・最終問題へ #4
+
+
+
+#4
+
+手首につけるアクセサリーといえば？
+
+
+・ネックレス #5
+・ブレスレット #6
+
+
+
+#5
+
+ざんねん、それは首につけます…
+
+
+・結果発表へ #7
+
+
+
+#6
+
+正解！
+正解数 +1
+
+
+・結果発表へ #7
+
+
+
+#7
+
+（選択肢の「#数字」の後にスペースを入れて、条件付きの選択肢を作れます。=は値と等しい、>=は以上、<=は以下、>は値より大きい、<は値より小さいとき、という意味）
+
+全問終了！さてあなたの評価は…
+
+
+・Ｓランク #8 正解数>=2
+・Ａランク #9 正解数=1
+・Ｂランク #10
+
+
+
+#8
+
+すごい！
+
+#9
+
+ふつう！
+
+#10
+
+しょぼい！！
+            `.trim();
+
+        const adventure = `
+#1
+
+（値を設定する命令は、一行で「名前 :数字」と書きます。:と数字は半角じゃないとダメ）
+
+私は宝とか平和とかを求め、たいまつを片手に洞窟の入り口に立った。
+
+【ステータスと持ち物】
+HP:10
+たいまつ:1
+
+さて、どうしようか。
+
+
+・洞窟に入る #2
+・洞窟に入らない #3
+
+
+
+#2
+
+（たいまつを持っている場合は使う。クイズの例のランク付けとは違い、たいまつを１個以上持っていれば使ってもよいし、使わなくてもよい、という場合には条件付き選択肢を無条件選択肢よりも「下」に書く）
+
+入ったら暗かった。
+たいまつに灯をともして明るくすると安全かもしれない。
+どうしようかな？
+
+
+・このまま進む #5
+・たいまつに灯をともす #6 たいまつ >= 1
+
+
+
+#3
+
+（値を増やす命令は一行で「名前 +数字」、値を減らす命令は「名前 -数字」と書きます。ここではHPを減らしてみます）
+
+洞窟の上から落石だ！
+ぎゃー！！！
+
+HP -3
+
+まだまだたくさん降ってくる、ヤバい！
+
+
+洞窟の中へ逃げ込む #2
+
+
+
+#4
+
+死。
+
+
+
+#5
+
+（さいころを振るように、値をランダムに決めるには「名前 ~数字」と書きます。数字は何面のさいころなのかを表すので、~6なら１～６の目が出ます）
+
+【ランダムイベント】
+暗くて足元がよく見えない…
+たいまつに灯をつけていない場合、ひょっとすると転んでしまうかもしれないし、幸運にも転ばないかもしれない。
+もっと露骨に言うと、６面のさいころを振って１，２，３，４が出たら転んでしまうかもしれない！！
+
+さいころの目 ~6
+
+
+・明るいので絶対転ばない #8 火のついたたいまつ >= 1
+・転ぶ #7 さいころの目 <= 4
+・転ばない #8
+
+#6
+
+たいまつに灯をつけた。明るい！転んだりしなくて済みそうだ。
+
+たいまつ -1
+火のついたたいまつ +1
+
+
+・次へ #2
+
+
+
+#7
+
+（変数同士も足したり引いたりできる。ランダムと足し合わせて、狙ったダメージを与える例）
+
+転んだ！
+ぎゃー！！！
+７～１２ダメージだ！！！
+
+ダメージ :7
+ブレ ~5
+ダメージ + ブレ
+HP - ダメージ
+
+
+・死亡 #4 HP<=0
+・無事 #8
+
+
+
+#8
+
+俺たちの冒険はこれからだ！（打ち切り）
+            `.trim();
+        
+        function testplay() {
+            const w = open();
+            w.document.head.innerHTML = `
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>div { max-width: 600px; padding: 1rem; margin: auto; color: #444444 } div:nth-last-child(2n+3) { background-color: #eeeeee }</style>
+<script>
+${script}
+<${""}/script>
+<title>${document.getElementById("title").value}</title>
+`;
+            w.document.body.innerHTML = `\n${document.getElementById("content").value}\n`;
+            const s = document.createElement("script");
+            s.textContent = `\n${script}\n`;
+            w.document.getElementsByTagName("script")[0].replaceWith(s);
+            w.init();
+        }
+        
+        function save() {
+            const downloadStr = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>div { max-width: 600px; padding: 1rem; margin: auto; color: #444444 } div:nth-last-child(2n+3) { background-color: #eeeeee }</style>
+<script>
+${script}
+<${""}/script>
+<title>${document.getElementById("title").value}</title>
+</head>
+<body>
+${document.getElementById("content").value}
+</body>
+</html>
+                `.trim();
+            const downloadFile = new Blob([downloadStr], { type: "text/html" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(downloadFile);
+            a.download = `${document.getElementById("title").value}.html`;
+            a.click();
+        }
+
+        function load(file) {
+            const r = new FileReader();
+            r.onload = () => {
+                let match;
+                if (match = r.result.match(/<title.*?>(.*)<\/title.*?>/i)) document.getElementById("title").value = match[1];
+                match = r.result.match(/<body.*?>([^]*)<\/body.*?>/i);
+                document.getElementById("content").value = match ? match[1].trim() : r.result;
+            };
+            r.readAsText(file);
+        }
+    </script>
+    <title>ゲームブックエディター</title>
+</head>
+<body>
+    タイトル：
+    <input type="text" id="title">
+    サンプル：
+    <input type="button" value="夢小説" onclick="content.value += dream">
+    <input type="button" value="クイズ" onclick="content.value += quiz">
+    <input type="button" value="冒険" onclick="content.value += adventure">
+    <br>
+    ファイルから読み込み：<input type="file" accept=".html" onchange="load(event.target.files[0])">
+    <textarea id="content"></textarea>
+    <input type="button" value="テストプレイ" onclick="testplay()">
+    <input type="button" value="保存" onclick="save()">
+    <input type="button" value="投稿" disabled>
+</body>
+</html>

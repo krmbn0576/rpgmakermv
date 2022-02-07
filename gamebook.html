@@ -20,30 +20,23 @@ function createScene(no, event) {
     const replaceFn = text => text.replace(replaceRe, (_, key) => replacements[key]);
     const text = scenes[no].split("\n").map(line => {
         let match = null;
-        if (match = line.match(/^\s*(\S+)\s+<=\s*$/)) {
+        if (match = line.match(/^\s*(\S+)\s*<=\s*$/)) {
             const onchange = `if (event.target.parentNode === document.body.lastChild.previousSibling) replacements['${match[1]}'] = event.target.value`;
             return `<input type="text" value="${replacements[match[1]] ?? match[1]}" onchange="${onchange}">`;
         }
-        if (match = line.match(/^\s*(\S+)\s+(:|\+|-)([Dd]?)(\d+)\s*$/)) {
-            const [, variable, operator, dice, value] = match;
-            variables[variable] ??= 0;
-            const delta = dice ? Math.floor(Math.random() * value + 1) : +value;
-            if (operator === ":") variables[variable] = delta;
-            if (operator === "+") variables[variable] += delta;
-            if (operator === "-") variables[variable] -= delta;
-            return `${replaceFn(line)} (${dice ? `${operator}${delta} ` : ""}=> ${variables[variable]})`;
-        }
-        if (match = line.match(/^\s*(\S+)\s+(:|\+|-)(\S+)\s*$/)) {
+        if (match = line.match(/^\s*(\S+)\s*(:|\+|-|~)\s*(\S+)\s*$/)) {
             const [, variable, operator, value] = match;
+            const isVariant = /\D+/.test(value);
+            if (isVariant && variables[value] === undefined) return replaceFn(line);
             variables[variable] ??= 0;
-            variables[value] ??= 0;
-            const delta = variables[value];
-            if (operator === ":") variables[variable] = delta;
-            if (operator === "+") variables[variable] += delta;
-            if (operator === "-") variables[variable] -= delta;
-            return `${replaceFn(line)} (${operator}${delta} => ${variables[variable]})`;
+            const operand = isVariant ? variables[value] : +value;
+            if (operator === ":") variables[variable] = operand;
+            if (operator === "+") variables[variable] += operand;
+            if (operator === "-") variables[variable] -= operand;
+            if (operator === "~") variables[variable] = Math.floor(Math.random() * operand + 1);
+            return `${replaceFn(line)} (${isVariant ? `${operator}${operand} ` : ""}=> ${variables[variable]})`;
         }
-        if (match = line.match(/^.*?\S+\s+#(\d+)\s*(\S+)\s+(=|<|>|<=|>=)(-?\d+)\s*$/)) {
+        if (match = line.match(/^.*\S+\s*#(\d+)\s*(\S+?)\s*(=|<|>|<=|>=)\s*(-?\d+)\s*$/)) {
             const [, no, variable, operator, value] = match;
             let meet = false;
             if ((operator[0] === "=" || operator[1] === "=") && variables[variable] === +value) meet = true;
@@ -53,7 +46,7 @@ function createScene(no, event) {
             if (choiceState === "initial") choiceState = "forced";
             return `<a href="#${no}" onclick="createScene(${no}, event)">${replaceFn(line)}</a><br>`;
         }
-        if (match = line.match(/^.*?\S+\s+#(\d+)\s*$/)) {
+        if (match = line.match(/^.*\S+\s*#(\d+)\s*$/)) {
             if (choiceState === "forced") return replaceFn(line) + "<br>";
             if (choiceState === "initial") choiceState = "selectable";
             return `<a href="#${match[1]}" onclick="createScene(${match[1]}, event)">${replaceFn(line)}</a><br>`;
@@ -64,7 +57,7 @@ function createScene(no, event) {
     scrollBy(0, document.body.lastChild.previousSibling.getBoundingClientRect().top);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function init() {
     let key = 0;
     document.body.textContent.split("\n").forEach(line => {
         let match = null;
@@ -79,12 +72,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (location.protocol === "file:") {
         document.body.innerHTML = "<div></div>";
     } else {
-        const downloadStr = `<!DOCTYPE html>\n<html>\n<head>${document.head.innerHTML}</head>\n<body>${document.body.textContent.slice(0, -1)}</body>\n</html>`;
+        const downloadStr = `<!DOCTYPE html>\n<html>\n<head>${document.head.innerHTML}</head>\n<${""}body>${document.body.textContent.slice(0, -1)}</body>\n</html>`;
         const downloadFile = new Blob([downloadStr], { type: "text/html" });
         document.body.innerHTML = `<div><a href="${URL.createObjectURL(downloadFile)}" download="${document.title}.html">この作品をダウンロード</a></div><div></div>`;
     }
     createScene(1);
-});
+};
+
+document.addEventListener("DOMContentLoaded", init);
 </script>
 <title>ゲームブック</title>
 </head>
@@ -126,11 +121,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 勇者の攻撃！
 
-攻撃力分のダメージ！
-魔王のHP -勇者の攻撃力
-
-さらに１～３のダメージボーナス！
-魔王のHP -D3
+勇者の攻撃力＋１～３のダメージ！
+ダメージ ~3
+ダメージ +勇者の攻撃力
+魔王のHP -ダメージ
 
 
 ・クリア！ #12 魔王のHP <=0
@@ -142,9 +136,12 @@ document.addEventListener("DOMContentLoaded", () => {
 ３つの火の玉が魔王を襲う！
 
 １～２０のダメージ！（３回連続）
-魔王のHP -D20
-魔王のHP -D20
-魔王のHP -D20
+ダメージ ~20
+魔王のHP -ダメージ
+ダメージ ~20
+魔王のHP -ダメージ
+ダメージ ~20
+魔王のHP -ダメージ
 
 炎の杖は役目を終えて砕け散った！
 
@@ -159,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 魔王のターン！
 
 ６面ダイスを振り、出目の結果により行動を決定します。
-魔王の行動 :D6
+魔王の行動 ~6
 
 
 ・蹴る #7 魔王の行動 <4
@@ -171,7 +168,8 @@ document.addEventListener("DOMContentLoaded", () => {
 魔王が蹴ってきた！
 
 １～３のダメージ！
-勇者のHP -D3
+ダメージ ~3
+勇者のHP -ダメージ
 
 
 ・死亡… #3 勇者のHP <=0
@@ -182,7 +180,8 @@ document.addEventListener("DOMContentLoaded", () => {
 魔王が斬ってきた！
 
 ４ダメージ！
-勇者のHP -4
+ダメージ ~4
+勇者のHP -ダメージ
 
 
 ・死亡… #3 勇者のHP <=0
