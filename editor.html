@@ -306,7 +306,7 @@ ${script}
 <${""}/script>
 <title>${document.getElementById("title").value}</title>
 `;
-            w.document.body.innerHTML = `\n${document.getElementById("content").value}\n`;
+            w.document.body.innerHTML = `\n${document.getElementById("content").value}\n\n`;
             const s = document.createElement("script");
             s.textContent = `\n${script}\n`;
             w.document.getElementsByTagName("script")[0].replaceWith(s);
