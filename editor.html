@@ -5,84 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>body { max-width: 600px; margin: auto; color: #444444 } textarea { width: 100%; height: 80vh }</style>
     <script>
-        const script = `
-const scenes = {};
-const variables = {};
-const replacements = {};
-
-function createScene(no, event) {
-    if (event) {
-        event.preventDefault();
-        if (!document.body.lastChild.style.height) document.body.lastChild.style.height = "100vh";
-        if (event.target.parentNode !== document.body.lastChild.previousSibling) return;
-    }
-    let choiceState = "initial";
-    const replaceRe = new RegExp(\`(\${Object.keys(replacements).join("|") || "0^"})\`, "g");
-    const replaceFn = text => text.replace(replaceRe, (_, key) => replacements[key]);
-    const text = scenes[no].split("\\n").map(line => {
-        let match = null;
-        if (match = line.match(/^\\s*(\\S+)\\s*<=\\s*$/)) {
-            const onchange = \`if (event.target.parentNode === document.body.lastChild.previousSibling) replacements['\${match[1]}'] = event.target.value\`;
-            return \`<input type="text" value="\${replacements[match[1]] ?? match[1]}" onchange="\${onchange}">\`;
-        }
-        if (match = line.match(/^\\s*(\\S+)\\s*(:|\\+|-|~)\\s*(\\S+)\\s*$/)) {
-            const [, variable, operator, value] = match;
-            const isVariant = /\\D+/.test(value);
-            if (isVariant && variables[value] === undefined) return replaceFn(line);
-            variables[variable] ??= 0;
-            const operand = isVariant ? variables[value] : +value;
-            if (operator === ":") variables[variable] = operand;
-            if (operator === "+") variables[variable] += operand;
-            if (operator === "-") variables[variable] -= operand;
-            if (operator === "~") variables[variable] = Math.floor(Math.random() * operand + 1);
-            return \`\${replaceFn(line)} (\${isVariant ? \`\${operator}\${operand} \` : ""}=> \${variables[variable]})\`;
-        }
-        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*(\\S+?)\\s*(=|<|>|<=|>=)\\s*(-?\\d+)\\s*$/)) {
-            const [, no, variable, operator, value] = match;
-            let meet = false;
-            if ((operator[0] === "=" || operator[1] === "=") && variables[variable] === +value) meet = true;
-            if (operator[0] === "<" && variables[variable] < +value) meet = true;
-            if (operator[0] === ">" && variables[variable] > +value) meet = true;
-            if (choiceState === "forced" || !meet) return replaceFn(line) + "<br>";
-            if (choiceState === "initial") choiceState = "forced";
-            return \`<a href="#\${no}" onclick="createScene(\${no}, event)">\${replaceFn(line)}</a><br>\`;
-        }
-        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*$/)) {
-            if (choiceState === "forced") return replaceFn(line) + "<br>";
-            if (choiceState === "initial") choiceState = "selectable";
-            return \`<a href="#\${match[1]}" onclick="createScene(\${match[1]}, event)">\${replaceFn(line)}</a><br>\`;
-        }
-        return replaceFn(line);
-    }).join("<br>");
-    document.body.lastChild.insertAdjacentHTML("beforebegin", \`<div>\${text}</div>\`);
-    scrollBy(0, document.body.lastChild.previousSibling.getBoundingClientRect().top);
-}
-
-function init() {
-    let key = 0;
-    document.body.textContent.split("\\n").forEach(line => {
-        let match = null;
-        if (match = line.match(/^\\s*#(\\d+)\\s*$/)) {
-            if (scenes[key]) scenes[key] = scenes[key].trim();
-            key = match[1];
-            scenes[key] = "";
-        }
-        scenes[key] += line + "\\n";
-    });
-    scenes[key] = scenes[key].trim();
-    if (location.protocol === "file:") {
-        document.body.innerHTML = "<div></div>";
-    } else {
-        const downloadStr = \`<!DOCTYPE html>\\n<html>\\n<head>\${document.head.innerHTML}</head>\\n<\${""}body>\${document.body.textContent.slice(0, -1)}</body>\\n</html>\`;
-        const downloadFile = new Blob([downloadStr], { type: "text/html" });
-        document.body.innerHTML = \`<div><a href="\${URL.createObjectURL(downloadFile)}" download="\${document.title}.html">この作品をダウンロード</a></div><div></div>\`;
-    }
-    createScene(1);
-};
-
-document.addEventListener("DOMContentLoaded", init);
-            `.trim();
-        
         const dream = `
 #1
 
@@ -295,25 +217,7 @@ HP - ダメージ
 俺たちの冒険はこれからだ！（打ち切り）
             `.trim();
         
-        function testplay() {
-            const w = open();
-            w.document.head.innerHTML = `
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>div { max-width: 600px; padding: 1rem; margin: auto; color: #444444 } div:nth-last-child(2n+3) { background-color: #eeeeee }</style>
-<script>
-${script}
-<${""}/script>
-<title>${document.getElementById("title").value}</title>
-`;
-            w.document.body.innerHTML = `\n${document.getElementById("content").value}\n\n`;
-            const s = document.createElement("script");
-            s.textContent = `\n${script}\n`;
-            w.document.getElementsByTagName("script")[0].replaceWith(s);
-            w.init();
-        }
-        
-        function save() {
+        function create() {
             const downloadStr = `
 <!DOCTYPE html>
 <html>
@@ -322,29 +226,114 @@ ${script}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>div { max-width: 600px; padding: 1rem; margin: auto; color: #444444 } div:nth-last-child(2n+3) { background-color: #eeeeee }</style>
 <script>
-${script}
+const scenes = {};
+let variables = {};
+let replacements = {};
+
+function createScene(no, event) {
+    if (event) {
+        event.preventDefault();
+        if (!document.body.lastChild.style.height) document.body.lastChild.style.height = "100vh";
+        if (event.target.parentNode !== document.body.lastChild.previousSibling) return;
+    }
+    let choiceState = "initial";
+    const replaceRe = new RegExp(\`(\${Object.keys(replacements).join("|") || "0^"})\`, "g");
+    const replaceFn = text => text.replace(replaceRe, (_, key) => replacements[key]);
+    const text = scenes[no].split("\\n").map(line => {
+        let match = null;
+        if (match = line.match(/^\\s*(\\S+)\\s*<=\\s*$/)) {
+            const onchange = \`if (event.target.parentNode === document.body.lastChild.previousSibling) replacements['\${match[1]}'] = event.target.value\`;
+            return \`<input type="text" value="\${replacements[match[1]] ?? match[1]}" onchange="\${onchange}">\`;
+        }
+        if (match = line.match(/^\\s*(\\S+)\\s*(:|\\+|-|~)\\s*(\\S+)\\s*$/)) {
+            const [, variable, operator, value] = match;
+            const isVariant = /\\D+/.test(value);
+            if (isVariant && variables[value] === undefined) return replaceFn(line);
+            variables[variable] ??= 0;
+            const operand = isVariant ? variables[value] : +value;
+            if (operator === ":") variables[variable] = operand;
+            if (operator === "+") variables[variable] += operand;
+            if (operator === "-") variables[variable] -= operand;
+            if (operator === "~") variables[variable] = Math.floor(Math.random() * operand + 1);
+            return \`\${replaceFn(line)} (\${isVariant ? \`\${operator}\${operand} \` : ""}=> \${variables[variable]})\`;
+        }
+        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*(\\S+?)\\s*(=|<|>|<=|>=)\\s*(-?\\d+)\\s*$/)) {
+            const [, no, variable, operator, value] = match;
+            let meet = false;
+            if ((operator[0] === "=" || operator[1] === "=") && variables[variable] === +value) meet = true;
+            if (operator[0] === "<" && variables[variable] < +value) meet = true;
+            if (operator[0] === ">" && variables[variable] > +value) meet = true;
+            if (choiceState === "forced" || !meet) return replaceFn(line) + "<br>";
+            if (choiceState === "initial") choiceState = "forced";
+            return \`<a href="#\${no}" onclick="createScene(\${no}, event)">\${replaceFn(line)}</a><br>\`;
+        }
+        if (match = line.match(/^.*\\S+\\s*#(\\d+)\\s*$/)) {
+            if (choiceState === "forced") return replaceFn(line) + "<br>";
+            if (choiceState === "initial") choiceState = "selectable";
+            return \`<a href="#\${match[1]}" onclick="createScene(\${match[1]}, event)">\${replaceFn(line)}</a><br>\`;
+        }
+        return replaceFn(line);
+    }).join("<br>");
+    const reset = choiceState === "initial" ? \`<br><br><a href="#1" onclick="variables = {};replacements = {};createScene(1, event)">最初から #1</a><br>\` : "";
+    document.body.lastChild.insertAdjacentHTML("beforebegin", \`<div>\${text}\${reset}</div>\`);
+    scrollBy(0, document.body.lastChild.previousSibling.getBoundingClientRect().top);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    let key = 0;
+    document.body.textContent.split("\\n").forEach(line => {
+        let match = null;
+        if (match = line.match(/^\\s*#(\\d+)\\s*$/)) {
+            if (scenes[key]) scenes[key] = scenes[key].trim();
+            key = match[1];
+            scenes[key] = "";
+        }
+        scenes[key] += line + "\\n";
+    });
+    scenes[key] = scenes[key].trim();
+    if (location.protocol === "file:") {
+        document.body.innerHTML = "<div></div>";
+    } else {
+        const downloadStr = \`<!DOCTYPE html>\\n<html>\\n<head>\${document.head.innerHTML}</head>\\n<\${""}body>\${document.body.textContent.slice(0, -1)}</body>\\n</html>\`;
+        const downloadFile = new Blob([downloadStr], { type: "text/html" });
+        document.body.innerHTML = \`<div><a href="\${URL.createObjectURL(downloadFile)}" download="\${document.title}.html">この作品をダウンロード</a></div><div></div>\`;
+    }
+    createScene(1);
+});
 <${""}/script>
-<title>${document.getElementById("title").value}</title>
+<title>${document.forms.upload.elements.title.value}</title>
 </head>
 <body>
-${document.getElementById("content").value}
+${document.forms.upload.elements.content.value}
 </body>
 </html>
                 `.trim();
             const downloadFile = new Blob([downloadStr], { type: "text/html" });
+            return URL.createObjectURL(downloadFile);
+        }
+
+        function play() {
+            const url = create();
+            open(url, "TestPlay");
+            URL.revokeObjectURL(url);
+        }
+
+        function save() {
+            const url = create();
             const a = document.createElement("a");
-            a.href = URL.createObjectURL(downloadFile);
-            a.download = `${document.getElementById("title").value}.html`;
+            a.href = url;
+            a.download = `${document.forms.upload.elements.title.value}.html`;
             a.click();
+            URL.revokeObjectURL(url);
         }
 
         function load(file) {
             const r = new FileReader();
             r.onload = () => {
                 let match;
-                if (match = r.result.match(/<title.*?>(.*)<\/title.*?>/i)) document.getElementById("title").value = match[1];
+                if (match = r.result.match(/<title.*?>(.*)<\/title.*?>/i)) document.forms.upload.elements.title.value = match[1];
                 match = r.result.match(/<body.*?>([^]*)<\/body.*?>/i);
-                document.getElementById("content").value = match ? match[1].trim() : r.result;
+                document.forms.upload.elements.content.value = match ? match[1].trim() : r.result;
             };
             r.readAsText(file);
         }
@@ -352,17 +341,20 @@ ${document.getElementById("content").value}
     <title>ゲームブックエディター</title>
 </head>
 <body>
-    タイトル：
-    <input type="text" id="title">
-    サンプル：
-    <input type="button" value="夢小説" onclick="content.value += dream">
-    <input type="button" value="クイズ" onclick="content.value += quiz">
-    <input type="button" value="冒険" onclick="content.value += adventure">
-    <br>
-    ファイルから読み込み：<input type="file" accept=".html" onchange="load(event.target.files[0])">
-    <textarea id="content"></textarea>
-    <input type="button" value="テストプレイ" onclick="testplay()">
-    <input type="button" value="保存" onclick="save()">
-    <input type="button" value="投稿" disabled>
+    <form action="upload.php" method="post" name="upload">
+        タイトル：
+        <input type="text" name="title" required>
+        サンプル：
+        <input type="button" value="夢小説" onclick="content.value += dream">
+        <input type="button" value="クイズ" onclick="content.value += quiz">
+        <input type="button" value="冒険" onclick="content.value += adventure">
+        <br>
+        ファイルから読み込み：
+        <input type="file" accept=".html" onchange="load(event.target.files[0])">
+        <textarea name="content" required></textarea>
+        <input type="button" value="テストプレイ" onclick="play()">
+        <input type="button" value="保存" onclick="save()">
+        <input type="submit" value="投稿" disabled>
+    </form>
 </body>
 </html>

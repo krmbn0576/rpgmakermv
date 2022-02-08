@@ -6,8 +6,8 @@
 <style>div { max-width: 600px; padding: 1rem; margin: auto; color: #444444 } div:nth-last-child(2n+3) { background-color: #eeeeee }</style>
 <script>
 const scenes = {};
-const variables = {};
-const replacements = {};
+let variables = {};
+let replacements = {};
 
 function createScene(no, event) {
     if (event) {
@@ -53,11 +53,12 @@ function createScene(no, event) {
         }
         return replaceFn(line);
     }).join("<br>");
-    document.body.lastChild.insertAdjacentHTML("beforebegin", `<div>${text}</div>`);
+    const reset = choiceState === "initial" ? `<br><br><a href="#1" onclick="variables = {};replacements = {};createScene(1, event)">最初から #1</a><br>` : "";
+    document.body.lastChild.insertAdjacentHTML("beforebegin", `<div>${text}${reset}</div>`);
     scrollBy(0, document.body.lastChild.previousSibling.getBoundingClientRect().top);
 }
 
-function init() {
+document.addEventListener("DOMContentLoaded", () => {
     let key = 0;
     document.body.textContent.split("\n").forEach(line => {
         let match = null;
@@ -77,9 +78,7 @@ function init() {
         document.body.innerHTML = `<div><a href="${URL.createObjectURL(downloadFile)}" download="${document.title}.html">この作品をダウンロード</a></div><div></div>`;
     }
     createScene(1);
-};
-
-document.addEventListener("DOMContentLoaded", init);
+});
 </script>
 <title>ゲームブック</title>
 </head>
